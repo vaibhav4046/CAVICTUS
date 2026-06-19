@@ -311,8 +311,8 @@ export default function PipelinePanel(props: PipelinePanelProps) {
         </h3>
       </div>
 
-      {/* Grid of 5 modeling steps (matching luxury mockup timeline visual) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Single calm vertical stream of agent cards (NotebookLM-style). */}
+      <div className="grid grid-cols-1 gap-4">
         {agentsConfig.map((agent) => {
           const state = props.agentStates[agent.num as 1 | 2 | 3 | 4 | 5];
           const isQueued = state.status === "queued";

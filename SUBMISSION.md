@@ -76,3 +76,48 @@ Record screen at https://civictas.vercel.app (ideally with a Gemini key set so t
 - [ ] Enter your 8-character Qualifier Approval Code.
 - [ ] Confirm a team of 2–5 members is listed (hackathon requires it).
 - [ ] Disclose tools (already done in README + the disclosure fields above).
+
+---
+
+## Strategist-swarm verdict (research + judge panel)
+
+**Readiness: strong but beatable.** Strongest on Responsibility (criterion 5); weakest where graduate marking is harshest: (2) AI-Reasoning has no *measured* evaluation, (3) Solution-Design is modular but invisible, (1) Problem-Understanding doesn't quote the brief or position against the field.
+
+**Already shipped from the verdict:** civic teal palette (intentional, not generated), single-column calm studio, council reframed as a *deliberation stress-test* (kills the synthetic-bias gotcha), landing positioning + scope/non-goals + a hard domain stat.
+
+**Highest-leverage remaining (do before submitting):**
+1. **Harden the Finalize gate to "demonstrably reasoned."** Require the official to name *which* data gap or dissenting council voice they weighed before Finalize unlocks. Cite Ben Green's "rubber-stamp" critique (CLSR 2022). Pre-empts the one attack a graduate panel lands.
+2. **Ship an honest eval table (AI-Reasoning — heaviest bucket).** Run the seeded scenarios and report REAL per-agent numbers (citation accuracy / data-gap honesty / equity-omission catch) *with disclosed failures*. Never fabricate. Converts "looks like reasoning" → "proves reasoning."
+3. **FOIA-survivable Decision Record export.** Extend the PDF into an accountability record an official could defend in a public-records request (recommendation, confidence, named gaps, equity audit, council split, human rationale + timestamp + 3 attestations).
+
+## One-hero video spine (≈3:30) — use THIS, not a feature tour
+
+Open on the person, quote the brief, run ONE spine; demote everything else to a 10-second montage.
+
+- **0:00–0:15 — Hook + brief.** "A Riverside planner has budget for four cooling centers and a week to decide. In many cities only ~32–51% of cooling centers are within walking distance of the most vulnerable." Quote USAII Challenge 6: *AI that helps communities make better decisions.*
+- **0:15–0:35 — One line.** "CIVICTAS advises; a human decides. Live, on Groq." Show the engine badge.
+- **0:35–2:30 — The spine (one click).** Run the sample → 5 agents stream → **pause on the Equity Audit naming who gets MISSED** → the Brief's "what CIVICTAS does NOT know" → the human picks, writes a rationale, ticks 3 checks, Finalizes.
+- **2:30–2:55 — "It also does" montage (10s each).** 108-persona stress-test · Telegram/voice confirm · exportable record.
+- **2:55–3:30 — Responsibility close.** "It models uncertainty, names its blind spots, and never makes the political call." AI-assisted · human-decided.
+
+## Architecture (put this diagram on screen)
+
+```
+            INPUTS                    PROCESS (server-side)                OUTPUTS / ACTIONS
+   ┌────────────────────┐     ┌──────────────────────────────┐     ┌────────────────────────┐
+   │ Setup form         │     │  ┌─ Agent 1 Framing          │     │ Brief (hero)           │
+   │ Decision Memory ◄──┼─────┼─ │  Agent 2 Evidence ─► web   │ ──► │ 108-persona stress-test│
+   │ (learning loop)    │     │  │  Agent 3 Simulation search │     │ Voice / Telegram / etc │
+   └────────────────────┘     │  │  Agent 4 Equity Audit      │     │ Exportable record      │
+                              │  └─ Agent 5 Brief             │     └───────────┬────────────┘
+   key stays SERVER-SIDE ─────┤   Groq llama-3.3-70b          │                 │
+   (browser only calls /api)  └──────────────────────────────┘     HUMAN GATE ◄─┘ (decision +
+                                                                    rationale + 3 checks → Memory)
+```
+
+## Why these choices (state this — banks AI-Reasoning + Solution-Design)
+
+- **5 agents, not 1 prompt:** each stage is separately inspectable and the equity audit is a *mandatory* gate, not a footnote a single prompt can skip.
+- **Web-grounded Evidence:** findings carry a confidence level + named data gap; unsourced claims are downgraded, not asserted.
+- **Groq llama-3.3-70b:** free, fast streaming so the reasoning is visible live; provider is swappable (Gemini adds native grounding).
+- **Human gate + Decision Memory:** the AI never finalizes; approved decisions become an auditable, reusable record.

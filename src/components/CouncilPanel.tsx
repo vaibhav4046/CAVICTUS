@@ -86,7 +86,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-bold text-muted uppercase tracking-widest px-1 flex items-center gap-2">
           <Users className="w-3.5 h-3.5" />
-          108-Persona Review Council
+          108-Persona Deliberation Stress-Test
         </h3>
         {result && (
           <span className="text-[10px] font-mono text-muted">
@@ -158,6 +158,14 @@ export default function CouncilPanel(props: CouncilPanelProps) {
               </div>
             )}
           </>
+        )}
+
+        {result && !loading && (
+          <p className="text-[10px] text-muted leading-relaxed border-t border-border-line pt-3">
+            Synthetic personas — a stress-test to surface dissent and show{" "}
+            <strong className="text-ink">where to verify with real residents</strong>, not a
+            substitute for community consent.
+          </p>
         )}
 
         {props.channels.length > 0 && (

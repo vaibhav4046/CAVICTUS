@@ -91,6 +91,22 @@ export default function Landing({ onEnter, engine }: LandingProps) {
             </div>
           ))}
         </div>
+
+        {/* Positioning + scope (problem-understanding signal) */}
+        <div className="mt-12 w-full max-w-2xl text-left bg-surface border border-border-line rounded-2xl p-5">
+          <p className="text-xs text-muted leading-relaxed">
+            <strong className="text-ink">Why it matters:</strong> in many cities only an estimated
+            32–51% of cooling centers sit within walking distance of the most heat-vulnerable
+            residents. CIVICTAS is a per-decision advising layer that sits between deliberation
+            tools (Polis, Decidim) and policy simulators (PolicyEngine): it advises, audits equity,
+            and forces an accountable human sign-off.
+          </p>
+          <p className="text-[11px] text-muted/80 leading-relaxed mt-3">
+            <strong className="text-ink">Scope:</strong> resource-siting and allocation decisions
+            for public systems. <strong className="text-ink">Non-goals:</strong> it does not vote,
+            replace public consultation, or make the political call — a human always does.
+          </p>
+        </div>
       </main>
 
       <footer className="py-6 text-center text-[11px] text-muted">
