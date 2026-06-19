@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, RefreshCw, CheckCircle2, SquarePen } from "lucide-react";
+import { Plus, RefreshCw, CheckCircle2, SquarePen, X } from "lucide-react";
 import { DecisionMemoryItem } from "../types";
 
 interface SidebarProps {
@@ -9,24 +9,58 @@ interface SidebarProps {
   onNewDecision: () => void;
   onClearMemory: () => void;
   onReuseTemplate: (item: DecisionMemoryItem) => void;
+  /** Mobile drawer open state (ignored at md+ where the rail is always docked). */
+  isOpen?: boolean;
+  /** Close the mobile drawer. */
+  onClose?: () => void;
 }
 
 export default function Sidebar(props: SidebarProps) {
+  const { isOpen = false, onClose } = props;
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     props.onClearMemory();
   };
 
+  // On mobile, picking an item or starting a new decision should drop the
+  // drawer so the workspace (the actual product) is what the user lands on.
+  const closeOnMobile = () => onClose?.();
+  const handleNewDecision = () => {
+    props.onNewDecision();
+    closeOnMobile();
+  };
+  const handleSelectItem = (id: string) => {
+    props.onSelectItem(id);
+    closeOnMobile();
+  };
+
   return (
     <aside
       id="decision-memory-sidebar"
-      className="w-full md:w-[270px] shrink-0 border-b md:border-b-0 md:border-r border-border-line bg-surface-solid flex flex-col md:h-[calc(100vh-64px)] overflow-hidden font-sans transition-colors duration-300"
+      aria-label="Decision memory"
+      className={`bg-surface-solid flex flex-col overflow-hidden font-sans shrink-0
+        fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border-line shadow-lg
+        transition-transform duration-300 ease-out
+        md:static md:z-auto md:shadow-none md:w-[270px] md:h-[calc(100vh-64px)] md:translate-x-0 md:border-b-0
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
     >
+      {/* Mobile drawer header — close control (hidden on desktop dock) */}
+      <div className="md:hidden flex items-center justify-between px-4 h-14 border-b border-border-line shrink-0">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted">Decisions</span>
+        <button
+          onClick={onClose}
+          aria-label="Close decisions panel"
+          className="h-8 w-8 grid place-items-center rounded-lg border border-border-line text-muted hover:text-ink hover:bg-surface-2 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
+          <X className="w-4 h-4" aria-hidden="true" />
+        </button>
+      </div>
       {/* Top action */}
       <div className="p-4 shrink-0">
         <button
           id="new-decision-btn"
-          onClick={props.onNewDecision}
+          onClick={handleNewDecision}
           className="w-full py-2.5 bg-accent text-on-accent rounded-lg text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
@@ -62,11 +96,11 @@ export default function Sidebar(props: SidebarProps) {
                 return (
                   <div
                     key={item.id}
-                    onClick={() => props.onSelectItem(item.id)}
+                    onClick={() => handleSelectItem(item.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        props.onSelectItem(item.id);
+                        handleSelectItem(item.id);
                       }
                     }}
                     className={`p-3.5 border-l-4 rounded-xl text-left cursor-pointer transition-all select-none duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
