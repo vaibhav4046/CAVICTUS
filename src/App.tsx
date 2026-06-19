@@ -10,6 +10,9 @@ import WorkspacePanel from "./components/WorkspacePanel";
 
 import EmptyState from "./components/EmptyState";
 import CouncilPanel, { ChannelStatus } from "./components/CouncilPanel";
+import Landing from "./components/Landing";
+import Onboarding from "./components/Onboarding";
+import VoiceAgent from "./components/VoiceAgent";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
 import { downloadDecisionBrief, getConfidencePill } from "./utils";
 
@@ -145,6 +148,9 @@ export default function App() {
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
   const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
+  const [view, setView] = useState<"landing" | "onboarding" | "studio">(() =>
+    typeof window !== "undefined" && localStorage.getItem("civictas_seen") ? "studio" : "landing"
+  );
 
   // States of individual agents (Steps 1 to 5)
   const [agentStates, setAgentStates] = useState<{
@@ -961,6 +967,24 @@ export default function App() {
     return "Vulnerability-Weighted Allocation Plan Proposal";
   };
 
+  if (view === "landing") {
+    return <Landing onEnter={() => setView("onboarding")} engine={engine} />;
+  }
+  if (view === "onboarding") {
+    return (
+      <Onboarding
+        onDone={() => {
+          try {
+            localStorage.setItem("civictas_seen", "1");
+          } catch {
+            /* ignore */
+          }
+          setView("studio");
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col font-sans transition-colors duration-300 relative overflow-hidden" id="civitas-root">
       
@@ -1150,6 +1174,11 @@ export default function App() {
             recommendation={extractRecommendationValue()}
             channels={channels}
           />
+
+          {/* Free in-browser voice agent for the human review */}
+          {isPipelineDone && !isPipelineRunning && (
+            <VoiceAgent proposal={extractRecommendationValue()} />
+          )}
 
           {/* Active Google Workspace Connect integration panel */}
           {isPipelineDone && !isPipelineRunning && (
