@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, HelpCircle, FileText, ChevronRight, CheckCircle, Flame, GraduationCap, ArrowUpRight, Scale } from "lucide-react";
+import { Sparkles, HelpCircle, FileText, ChevronRight, CheckCircle, Flame, GraduationCap, ArrowUpRight, Scale, Cpu } from "lucide-react";
 
 import Sidebar from "./components/Sidebar";
 import HowItWorksModal from "./components/HowItWorksModal";
@@ -9,6 +9,7 @@ import HumanReviewPanel from "./components/HumanReviewPanel";
 import WorkspacePanel from "./components/WorkspacePanel";
 
 import EmptyState from "./components/EmptyState";
+import CouncilPanel, { ChannelStatus } from "./components/CouncilPanel";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
 import { downloadDecisionBrief, getConfidencePill } from "./utils";
 
@@ -40,6 +41,16 @@ export default function App() {
     }
     localStorage.setItem("civictas_theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
+
+  // Surface which AI engine/model is actually running (transparency badge).
+  useEffect(() => {
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.engine) setEngine(d.engine);
+      })
+      .catch(() => {});
+  }, []);
 
   // Reviewers states
   const [reviewers, setReviewers] = useState<Array<{
@@ -132,6 +143,8 @@ export default function App() {
   const [isPipelineDone, setIsPipelineDone] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false);
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
+  const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
+  const [channels, setChannels] = useState<ChannelStatus[]>([]);
 
   // States of individual agents (Steps 1 to 5)
   const [agentStates, setAgentStates] = useState<{
@@ -381,7 +394,8 @@ export default function App() {
         body: JSON.stringify(payload),
       });
       const data = await resp.json();
-      
+      setChannels(data.channels || []);
+
       setNotificationStatus({
         sent: true,
         simulated: !!data.simulated,
@@ -431,6 +445,7 @@ export default function App() {
     setIsPipelineDone(false);
     setIsFinalized(false);
     setGroundingSources([]);
+    setChannels([]);
     setHumanDecisionType("");
     setChosenOption("");
     setHumanRationale("");
@@ -994,6 +1009,16 @@ export default function App() {
             AI-assisted · Human-decided
           </span>
 
+          {engine && (
+            <span
+              className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/20"
+              title={`Engine: ${engine.provider} · ${engine.model}${engine.search ? " · web search on" : ""}`}
+            >
+              <Cpu className="w-3 h-3" />
+              {engine.provider} · {engine.model}
+            </span>
+          )}
+
           {/* Minimal Elegant Theme Toggle Button */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
@@ -1114,6 +1139,16 @@ export default function App() {
             onAddReviewer={handleAddReviewer}
             onDeleteReviewer={handleDeleteReviewer}
             notificationStatus={notificationStatus}
+          />
+
+          {/* 108-persona judging council + multi-channel review dispatch status */}
+          <CouncilPanel
+            active={isPipelineDone && !isPipelineRunning}
+            category={category}
+            situation={situation}
+            equityGoal={equityGoal}
+            recommendation={extractRecommendationValue()}
+            channels={channels}
           />
 
           {/* Active Google Workspace Connect integration panel */}
