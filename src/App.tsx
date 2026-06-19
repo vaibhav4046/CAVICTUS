@@ -1031,16 +1031,16 @@ export default function App() {
 
         {/* Informative actions */}
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono bg-slate-100/60 dark:bg-slate-800/60 text-blue-600 dark:text-blue-400 font-bold px-3 py-1 rounded-full border border-border-line">
+          <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-slate-100/60 dark:bg-slate-800/60 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded-full border border-border-line">
             AI-assisted · Human-decided
           </span>
 
           {engine && (
             <span
-              className="inline-flex items-center gap-1.5 text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2.5 py-1 rounded-full border border-emerald-500/20"
+              className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2.5 py-1 rounded-full border border-emerald-500/20"
               title={`Engine: ${engine.provider} · ${engine.model}${engine.search ? " · web search on" : ""}`}
             >
-              <Cpu className="w-3 h-3" />
+              <Cpu className="w-3 h-3 shrink-0" />
               {engine.provider} · {engine.model}
             </span>
           )}
