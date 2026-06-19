@@ -45,8 +45,8 @@ export interface AgentMessages {
   useGrounding: boolean;
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const GEMINI_MODEL = cleanKey(process.env.GEMINI_MODEL) || "gemini-2.5-flash";
+const GROQ_MODEL = cleanKey(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile";
 
 export function resolveProvider(): Provider {
   const forced = (process.env.LLM_PROVIDER || "").toLowerCase().trim();
