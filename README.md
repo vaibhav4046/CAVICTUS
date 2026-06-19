@@ -44,6 +44,13 @@ office consistent and accountable.
 > uncertainty and surfaces trade-offs; the political, ethical, and budget
 > judgment stays entirely with humans.
 
+### Built to be inspected — and to demo safely
+
+- **Honest reality labels** — one consistent pill marks every surface as **Live**, **Mock**, **Simulated**, or **Needs credentials** (engine, notification channels, voice). Nothing pretends to be more real than it is.
+- **Harness trace** — a compact strip shows the real per-agent run state (model · validation · source count · status). No fabricated latency or token numbers; unknowns show `—`.
+- **Loud failures, never silent** — if a provider hits a rate/quota limit, the pipeline shows an honest error naming the agent that failed, with **Retry** and **Continue in demo mode**.
+- **Demo-safe by design** — *Continue in demo mode* re-runs the full pipeline **and** the 108-persona council through the deterministic mock so a live quota limit can never break a demo. Demo output is always clearly labeled as canned, never passed off as live.
+
 ## Architecture
 
 ```
@@ -72,8 +79,8 @@ npm run dev          # http://localhost:3000
 ```
 
 That's it — with no key, CIVICTAS runs in **demo mode** and streams a full,
-realistic pipeline. To use a real model, copy `.env.example` to `.env.local`
-and add one key:
+realistic pipeline. To use a real model, copy `.env.example` to `.env`
+(the server reads it via `dotenv`) and add one key:
 
 - **Gemini** (free, includes web grounding): https://aistudio.google.com/apikey → `GEMINI_API_KEY`
 - **Groq** (free, fast): https://console.groq.com/keys → `GROQ_API_KEY`
