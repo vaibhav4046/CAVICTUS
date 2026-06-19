@@ -1,10 +1,10 @@
-import { FileBox, Network, ArrowRight } from "lucide-react";
+import { FileBox, Play } from "lucide-react";
 
 interface EmptyStateProps {
-  onStart: () => void;
+  onRunSample: () => void;
 }
 
-export default function EmptyState({ onStart }: EmptyStateProps) {
+export default function EmptyState({ onRunSample }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center mt-8 bg-surface-solid border border-border-line rounded-2xl shadow-sm">
       <div className="w-24 h-24 mb-6 relative">
@@ -28,19 +28,19 @@ export default function EmptyState({ onStart }: EmptyStateProps) {
       </div>
       
       <h2 className="text-xl font-bold font-display tracking-tight text-ink mb-2">
-        Ready to Simulate
+        See a full decision in one click
       </h2>
-      
+
       <p className="max-w-md text-sm text-muted font-medium leading-relaxed mb-8">
-        The CIVICTAS platform uses multi-agent simulation to analyze civic policy impact and evaluate equity constraints. Configure your parameters in the setup panel above or select a template from the sidebar to begin processing.
+        CIVICTAS runs five specialized AI agents — framing, evidence, simulation, equity audit, and a plain-language brief — then hands the decision to a human. Press the button to watch the seeded Riverside cooling-center decision unfold, or edit the setup panel above to run your own.
       </p>
 
       <button
-        onClick={onStart}
-        className="inline-flex items-center gap-2 bg-ink text-bg hover:bg-ink/90 font-bold text-sm px-6 py-3 rounded-xl transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-solid"
+        onClick={onRunSample}
+        className="inline-flex items-center gap-2 bg-gradient-to-r from-accent to-accent-2 text-white hover:opacity-90 font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-accent/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-solid"
       >
-        Focus First Input
-        <ArrowRight className="w-4 h-4" />
+        <Play className="w-4 h-4 fill-current" />
+        Run the sample decision
       </button>
 
       <div className="mt-12 flex items-center gap-6 opacity-60">

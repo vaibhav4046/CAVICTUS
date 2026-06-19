@@ -6,6 +6,13 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    // Tailwind v4 is compiled by the @tailwindcss/vite plugin above, so the
+    // generic PostCSS pass needs no plugins. Pinning it here also stops Vite
+    // from walking up the tree and picking up an unrelated ancestor
+    // postcss.config (which would try to load Tailwind as a v3 PostCSS plugin).
+    css: {
+      postcss: { plugins: [] },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

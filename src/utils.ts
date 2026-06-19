@@ -254,5 +254,5 @@ export function downloadDecisionBrief(details: {
     .replace(/[^a-z0-9]+/g, "_")
     .slice(0, 30);
   
-  doc.save(`civitas_decision_brief_${sanitizedCategory}.pdf`);
+  doc.save(`civictas_decision_brief_${sanitizedCategory}.pdf`);
 }
