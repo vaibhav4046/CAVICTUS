@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { HelpCircle, FileText, Cpu, Sun, Moon, Check, ChevronDown, ChevronRight } from "lucide-react";
+import { HelpCircle, FileText, Cpu, Sun, Moon, Check, ChevronDown, ChevronRight, PanelLeft } from "lucide-react";
 
 import Sidebar from "./components/Sidebar";
 import BrandMark from "./components/BrandMark";
@@ -156,6 +156,7 @@ export default function App() {
   );
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer; desktop rail is always docked
   const prevRunningRef = useRef(false);
 
   // After a fresh pipeline run finishes, spotlight the human decision gate.
@@ -1026,6 +1027,16 @@ export default function App() {
         className="h-16 border-b border-border-line bg-surface-solid sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 select-none transition-colors duration-300"
       >
         <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile: open the Decisions drawer (desktop keeps the docked rail) */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open decisions panel"
+            aria-expanded={sidebarOpen}
+            aria-controls="decision-memory-sidebar"
+            className="md:hidden h-9 w-9 -ml-1 grid place-items-center rounded-lg border border-border-line text-muted hover:text-ink hover:bg-surface-2 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          >
+            <PanelLeft className="w-4 h-4" aria-hidden="true" />
+          </button>
           {/* Brand mark — community ring + compass */}
           <BrandMark className="w-9 h-9 shrink-0 text-ink" />
           <div className="min-w-0">
@@ -1073,7 +1084,15 @@ export default function App() {
 
       {/* Main Structural body wrapper split into Sidebar and Workspace */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0 relative z-10">
-        {/* Left column fixed Sidebar */}
+        {/* Mobile drawer scrim — tap to dismiss (no effect on desktop dock) */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        {/* Decision memory rail — docked on desktop, off-canvas drawer on mobile */}
         <Sidebar
           memoryItems={memoryItems}
           selectedItemId={selectedItemId}
@@ -1081,6 +1100,8 @@ export default function App() {
           onNewDecision={handleResetWorkflow}
           onClearMemory={handleClearMemory}
           onReuseTemplate={handleReuseTemplate}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
 
         {/* Right scrolling workspace container */}
