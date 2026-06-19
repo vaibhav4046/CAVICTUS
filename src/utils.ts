@@ -47,6 +47,64 @@ export function getConfidencePill(text: string): "high" | "medium" | "low" | nul
 }
 
 /**
+ * Structured, honest description of a failed advisory step. Built from whatever
+ * the agent endpoint actually threw — no invented latency or token numbers.
+ */
+export interface PipelineFailure {
+  /** Friendly label of the agent that failed, e.g. "Agent 3 — Simulation". */
+  agentLabel: string;
+  /** Step number (1-5) so the UI can offer a targeted retry. */
+  step: number;
+  /** Plain-language guidance shown to the operator. */
+  message: string;
+  /** Raw status/message from the provider, shown verbatim for transparency. */
+  detail: string;
+  /** True when the provider declined for rate/quota reasons (e.g. HTTP 429). */
+  isRateLimit: boolean;
+  /** Parsed HTTP status when the error carried one. */
+  status?: number;
+}
+
+/**
+ * Translate a thrown pipeline error into an honest, user-facing failure record.
+ * Detects rate/quota limits (429) and auth/server errors so the alert surface
+ * can give an accurate reason instead of silently swallowing the failure.
+ */
+export function describePipelineFailure(
+  rawMessage: string,
+  agentLabel: string,
+  step: number
+): PipelineFailure {
+  const detail = (rawMessage || "").trim() || "The model returned no output.";
+
+  // Prefer a parenthesized status like "(429)"; fall back to a bare 4xx/5xx.
+  const paren = detail.match(/\((\d{3})\)/);
+  const bare = detail.match(/\b([45]\d\d)\b/);
+  const status = paren ? Number(paren[1]) : bare ? Number(bare[1]) : undefined;
+
+  const isRateLimit =
+    status === 429 ||
+    /\b429\b|rate.?limit|quota|tokens? per (day|minute|hour)|too many requests/i.test(detail);
+
+  let message: string;
+  if (isRateLimit) {
+    message =
+      "The AI provider declined the request because a rate or quota limit was reached. Wait a few minutes and retry, or check that the configured API key still has quota.";
+  } else if (status === 401 || status === 403) {
+    message =
+      "The AI provider rejected the credentials. Check that a valid API key is configured, then retry the step.";
+  } else if (status && status >= 500) {
+    message =
+      "The AI provider returned a server error. This is usually temporary — retry the step in a moment.";
+  } else {
+    message =
+      "This advisory step failed before it could return output. Retry the step, or check the server logs for the underlying cause.";
+  }
+
+  return { agentLabel, step, message, detail, isRateLimit, status };
+}
+
+/**
  * Formats standard numbers into localized US currency
  */
 export function formatCurrency(value: string | number): string {

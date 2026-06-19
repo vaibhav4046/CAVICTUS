@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square, Volume2, AlertCircle } from "lucide-react";
+import RealityPill from "./RealityPill";
 
 /**
  * Free, open in-browser voice agent — no account, no cost.
@@ -118,7 +119,12 @@ export default function VoiceAgent({ proposal, onCapture }: VoiceAgentProps) {
           <Volume2 className="w-3.5 h-3.5" />
           Voice review · free in-browser agent
         </h3>
-        <span className="text-[10px] font-mono text-muted">Web Speech · STT + TTS + VAD</span>
+        <RealityPill
+          kind={supported ? "live" : "unavailable"}
+          label={supported ? "Live · in-browser" : "Unavailable"}
+          pulse={supported}
+          title="Free Web Speech API — STT + TTS + VAD, no account or cost"
+        />
       </div>
 
       {!supported ? (

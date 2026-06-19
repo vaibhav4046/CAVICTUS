@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, RefreshCw, CheckCircle2, SquarePen, X } from "lucide-react";
+import { Plus, RefreshCw, CheckCircle2, SquarePen, X, Trash2 } from "lucide-react";
 import { DecisionMemoryItem } from "../types";
 
 interface SidebarProps {
@@ -183,8 +183,9 @@ export default function Sidebar(props: SidebarProps) {
           <button
             id="clear-all-memory-btn"
             onClick={handleDeleteClick}
-            className="w-full py-2 border border-danger/30 text-danger rounded-xl text-xs font-bold hover:bg-danger/10 cursor-pointer transition-all uppercase tracking-wide focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="w-full inline-flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-faint hover:text-danger rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
             Clear memory
           </button>
         )}
