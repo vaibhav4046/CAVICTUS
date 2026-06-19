@@ -1,59 +1,117 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+/* ────────────────────────────────────────────────────────────────────────
+   CIVICTAS design system — "Civic editorial"
+   Institutional gravitas + premium control hub. One coherent token set,
+   depth-correct in both themes. Components must read these tokens, never
+   raw Tailwind palette colors, or light/dark drift returns.
+
+   Surface model (3 elevations):
+     --bg          recessed page (warm paper in light, deep ink in dark)
+     --surface     elevated card  (pops off the page)
+     --surface-2   nested inset / code / quiet fill
+   All surfaces are SOLID — no translucency, so a card reads the same
+   regardless of what sits behind it.
+   ──────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --color-raw-bg: #F6F8FA;
+  /* Light — warm paper, white cards, hairline borders, real shadow depth */
+  --color-raw-bg: #FAFAF8;
   --color-raw-surface: #FFFFFF;
   --color-raw-surface-solid: #FFFFFF;
-  --color-raw-ink: #1F2024;
-  --color-raw-muted: #5F6571;
-  --color-raw-border-line: #E4E7EC;
-  --color-raw-accent: #0E7490;
-  --color-raw-accent-2: #0F766E;
-  
-  --color-raw-agent-framing: #6366F1;
-  --color-raw-agent-evidence: #14B8A6;
-  --color-raw-agent-simulation: #8B5CF6;
-  --color-raw-agent-equity: #F59E0B;
-  --color-raw-agent-transparency: #10B981;
+  --color-raw-surface-2: #F4F5F2;
+  --color-raw-ink: #16181D;
+  --color-raw-ink-soft: #2C313B;
+  --color-raw-muted: #586172;          /* ≥4.5:1 on white and on paper */
+  --color-raw-faint: #767C8A;          /* large/secondary text only, ≈4.7:1 */
+  --color-raw-border-line: #E5E7E2;
+  --color-raw-border-strong: #D2D6CF;
+  --color-raw-accent: #0F766E;         /* civic teal, ≥4.5:1 on white */
+  --color-raw-accent-2: #0E7490;
+  --color-raw-accent-soft: #E6F2F0;    /* tinted fill behind accent icons */
+  --color-raw-on-accent: #FFFFFF;
+  --color-raw-positive: #047857;
+  --color-raw-warning: #B45309;
+  --color-raw-danger: #BE123C;
+
+  /* Five pipeline stages — one cohesive cool ramp (teal → indigo → violet).
+     Analogous, not rainbow: reads as one system in five stages. */
+  --color-raw-agent-framing: #0F766E;
+  --color-raw-agent-evidence: #0E7490;
+  --color-raw-agent-simulation: #0369A1;
+  --color-raw-agent-equity: #4338CA;
+  --color-raw-agent-transparency: #6D28D9;
+
+  --shadow-color-1: rgba(16, 24, 40, 0.05);
+  --shadow-color-2: rgba(16, 24, 40, 0.08);
 }
 
 .dark {
-  --color-raw-bg: #0B0E14;
-  --color-raw-surface: rgba(20, 24, 33, 0.60);
-  --color-raw-surface-solid: #141822;
-  --color-raw-ink: #E7E9EE;
-  --color-raw-muted: #9AA3B2;
-  --color-raw-border-line: rgba(255, 255, 255, 0.08);
-  --color-raw-accent: #2DD4BF;
-  --color-raw-accent-2: #22D3EE;
-  
-  --color-raw-agent-framing: #6366F1;
-  --color-raw-agent-evidence: #14B8A6;
-  --color-raw-agent-simulation: #8B5CF6;
-  --color-raw-agent-equity: #F59E0B;
-  --color-raw-agent-transparency: #10B981;
+  /* Dark — deep ink page, SOLID elevated surfaces, visible (not 8%) borders */
+  --color-raw-bg: #0A0C10;
+  --color-raw-surface: #13161D;        /* solid — was translucent, the drift source */
+  --color-raw-surface-solid: #13161D;
+  --color-raw-surface-2: #1A1E27;
+  --color-raw-ink: #E8EAED;
+  --color-raw-ink-soft: #C6CAD2;
+  --color-raw-muted: #9AA2B0;          /* ≥4.5:1 on #13161D */
+  --color-raw-faint: #6B7280;
+  --color-raw-border-line: #262B34;
+  --color-raw-border-strong: #353B46;
+  --color-raw-accent: #2DD4BF;         /* bright teal pops on dark */
+  --color-raw-accent-2: #38BDF8;
+  --color-raw-accent-soft: #0E2A2A;
+  --color-raw-on-accent: #03201D;
+  --color-raw-positive: #34D399;
+  --color-raw-warning: #FBBF24;
+  --color-raw-danger: #FB7185;
+
+  /* Brightened in dark for ≥4.5:1 on the dark surface (AA) */
+  --color-raw-agent-framing: #2DD4BF;
+  --color-raw-agent-evidence: #38BDF8;
+  --color-raw-agent-simulation: #60A5FA;
+  --color-raw-agent-equity: #818CF8;
+  --color-raw-agent-transparency: #A78BFA;
+
+  --shadow-color-1: rgba(0, 0, 0, 0.40);
+  --shadow-color-2: rgba(0, 0, 0, 0.55);
 }
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
+
   --color-bg: var(--color-raw-bg);
   --color-surface: var(--color-raw-surface);
   --color-surface-solid: var(--color-raw-surface-solid);
+  --color-surface-2: var(--color-raw-surface-2);
   --color-ink: var(--color-raw-ink);
+  --color-ink-soft: var(--color-raw-ink-soft);
   --color-muted: var(--color-raw-muted);
+  --color-faint: var(--color-raw-faint);
   --color-border-line: var(--color-raw-border-line);
+  --color-border-strong: var(--color-raw-border-strong);
   --color-accent: var(--color-raw-accent);
   --color-accent-2: var(--color-raw-accent-2);
-  
+  --color-accent-soft: var(--color-raw-accent-soft);
+  --color-on-accent: var(--color-raw-on-accent);
+  --color-positive: var(--color-raw-positive);
+  --color-warning: var(--color-raw-warning);
+  --color-danger: var(--color-raw-danger);
+
   --color-agent-framing: var(--color-raw-agent-framing);
   --color-agent-evidence: var(--color-raw-agent-evidence);
   --color-agent-simulation: var(--color-raw-agent-simulation);
   --color-agent-equity: var(--color-raw-agent-equity);
   --color-agent-transparency: var(--color-raw-agent-transparency);
+
+  /* Premium soft shadows — subtle, layered, slightly cool. Barely visible in
+     dark (depth there comes from surface/border contrast, by design). */
+  --shadow-sm: 0 1px 2px var(--shadow-color-1), 0 1px 3px var(--shadow-color-1);
+  --shadow-md: 0 2px 4px -1px var(--shadow-color-1), 0 6px 16px -3px var(--shadow-color-2);
+  --shadow-lg: 0 10px 28px -6px var(--shadow-color-2), 0 2px 8px -2px var(--shadow-color-1);
 }
 
 @layer base {
@@ -61,71 +119,85 @@
     background-color: var(--color-raw-bg);
     color: var(--color-raw-ink);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
-  
+
+  /* Editorial display headings: optical sizing + tight tracking */
+  .font-display {
+    font-optical-sizing: auto;
+    letter-spacing: -0.018em;
+  }
+
   input, select, textarea {
-    background-color: var(--color-raw-surface-solid);
+    background-color: var(--color-raw-surface-2);
     color: var(--color-raw-ink);
+  }
+
+  ::selection {
+    background-color: var(--color-raw-accent);
+    color: var(--color-raw-on-accent);
+  }
+
+  /* Visible, consistent keyboard focus everywhere (WCAG 2.4.7 / 2.4.11). */
+  :focus-visible {
+    outline: 2px solid var(--color-raw-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Screen-reader-only utility + skip-link reveal on focus. */
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto; height: auto;
+    margin: 0; overflow: visible;
+    clip: auto; white-space: normal;
   }
 }
 
-/* Float Animations for low-opacity background decoration */
+/* Decorative float for low-opacity background atmosphere (dark glow only) */
 @keyframes float-slow {
   0% { transform: translate(0px, 0px) scale(1); }
   50% { transform: translate(40px, -60px) scale(1.15); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
-
 @keyframes float-reverse {
   0% { transform: translate(0px, 0px) scale(1.1); }
   50% { transform: translate(-50px, 50px) scale(0.9); }
   100% { transform: translate(0px, 0px) scale(1.1); }
 }
+.animate-float-slow { animation: float-slow 22s infinite ease-in-out; }
+.animate-float-reverse { animation: float-reverse 26s infinite ease-in-out; }
 
-.animate-float-slow {
-  animation: float-slow 22s infinite ease-in-out;
-}
+/* Streaming cursor for live agent output */
+@keyframes blink-caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.animate-caret { animation: blink-caret 1s step-end infinite; }
 
-.animate-float-reverse {
-  animation: float-reverse 26s infinite ease-in-out;
-}
+/* Quiet, premium scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-raw-border-strong); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-raw-faint); }
 
-/* Styled scrollbars for high-density components */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* Respect users who prefer reduced motion: freeze decorative float/pulse/spin. */
+/* Respect reduced-motion: freeze all decorative motion (WCAG 2.3.3). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-
   .animate-float-slow,
-  .animate-float-reverse {
-    animation: none !important;
-  }
+  .animate-float-reverse,
+  .animate-caret { animation: none !important; }
 }

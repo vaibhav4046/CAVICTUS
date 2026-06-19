@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Play, RotateCcw, ShieldAlert } from "lucide-react";
+import { Play, RotateCcw, ShieldCheck } from "lucide-react";
 import { DecisionConstraints } from "../types";
 
 interface SetupPanelProps {
@@ -14,6 +14,13 @@ interface SetupPanelProps {
     constraints: DecisionConstraints;
   } | null;
 }
+
+const REQUIRED = (
+  <>
+    <span className="text-danger" aria-hidden="true"> *</span>
+    <span className="sr-only"> (required)</span>
+  </>
+);
 
 export default function SetupPanel(props: SetupPanelProps) {
   const [category, setCategory] = useState("Cooling centers (extreme heat)");
@@ -54,36 +61,34 @@ export default function SetupPanel(props: SetupPanelProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (props.isPipelineRunning) return;
-    props.onRunPipeline(
-      category,
-      situation,
-      { budget, sites, equityGoal },
-      datasetText
-    );
+    props.onRunPipeline(category, situation, { budget, sites, equityGoal }, datasetText);
   };
 
   const isLocked = props.isPipelineRunning || props.isPipelineDone;
 
+  const inputBase =
+    "w-full text-sm border border-border-line rounded-xl text-ink placeholder:text-faint focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 outline-none bg-surface-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
+
   return (
     <section
       id="setup-panel"
-      className="bg-surface-solid/70 dark:bg-surface-solid/40 border border-border-line backdrop-blur-md rounded-2xl shadow-lg shadow-black/[0.02] p-6 space-y-6"
+      className="bg-surface border border-border-line rounded-2xl shadow-sm p-6 space-y-6"
     >
-      <div className="flex items-center justify-between border-b border-border-line pb-4">
-        <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-          <span>1. Operational Setup</span>
-          <span className="text-[10px] font-semibold text-accent bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full font-mono normal-case">
+      <div className="flex items-center justify-between gap-3 border-b border-border-line pb-4">
+        <h3 className="text-sm font-bold text-ink flex items-center gap-2 flex-wrap">
+          <span>Operational setup</span>
+          <span className="text-[10px] font-semibold text-accent bg-accent-soft border border-accent/20 px-2.5 py-0.5 rounded-full font-mono">
             Human input control
           </span>
         </h3>
         {(props.isPipelineDone || props.isPipelineRunning) && (
           <button
             onClick={props.onReset}
-            className="text-xs text-muted hover:text-ink hover:bg-surface/50 p-1.5 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer font-medium border border-border-line bg-surface-solid/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="shrink-0 text-xs text-muted hover:text-ink hover:bg-surface-2 p-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer font-medium border border-border-line bg-surface focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
             title="Start fresh and unlock inputs"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset Setup
+            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+            Reset
           </button>
         )}
       </div>
@@ -93,14 +98,14 @@ export default function SetupPanel(props: SetupPanelProps) {
           {/* Decision Category */}
           <div className="space-y-1.5 col-span-1 md:col-span-2">
             <label htmlFor="decision-type-select" className="block text-xs font-bold text-muted uppercase tracking-wide">
-              Decision Category
+              Decision category
             </label>
             <select
               id="decision-type-select"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               disabled={isLocked}
-              className="w-full text-sm border border-border-line p-3 rounded-xl font-medium text-ink focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none bg-surface-solid dark:bg-[#121620] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              className={`${inputBase} p-3 font-medium cursor-pointer`}
             >
               <option value="Cooling centers (extreme heat)">Cooling centers (extreme heat)</option>
               <option value="Warming shelters (winter)">Warming shelters (winter)</option>
@@ -113,7 +118,7 @@ export default function SetupPanel(props: SetupPanelProps) {
           {/* Situation Text */}
           <div className="space-y-1.5 col-span-1 md:col-span-2">
             <label htmlFor="situation-textarea" className="block text-xs font-bold text-muted uppercase tracking-wide">
-              Decision Situation & Specific Context
+              Decision situation &amp; specific context{REQUIRED}
             </label>
             <textarea
               id="situation-textarea"
@@ -123,17 +128,18 @@ export default function SetupPanel(props: SetupPanelProps) {
               disabled={isLocked}
               rows={4}
               required
-              className="w-full text-sm border border-border-line p-4 rounded-xl text-ink placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none bg-surface-solid dark:bg-[#121620] resize-none disabled:opacity-60 disabled:bg-surface-solid/50 disabled:cursor-not-allowed leading-relaxed transition-colors"
+              aria-required="true"
+              className={`${inputBase} p-4 resize-none leading-relaxed`}
             />
           </div>
 
           {/* Budget */}
           <div className="space-y-1.5">
             <label htmlFor="budget-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
-              Authorized Budget (USD)
+              Authorized budget (USD){REQUIRED}
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-3 text-xs font-semibold text-muted font-mono">$</span>
+              <span className="absolute left-4 top-2.5 text-xs font-semibold text-muted font-mono">$</span>
               <input
                 id="budget-input"
                 type="text"
@@ -142,7 +148,8 @@ export default function SetupPanel(props: SetupPanelProps) {
                 placeholder="e.g. 150,000"
                 disabled={isLocked}
                 required
-                className="w-full text-sm border border-border-line py-2.5 pl-8 pr-4 rounded-xl font-mono text-ink placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none bg-surface-solid dark:bg-[#121620] disabled:opacity-60 disabled:bg-surface-solid/50 disabled:cursor-not-allowed transition-colors"
+                aria-required="true"
+                className={`${inputBase} py-2.5 pl-8 pr-4 font-mono`}
               />
             </div>
           </div>
@@ -150,7 +157,7 @@ export default function SetupPanel(props: SetupPanelProps) {
           {/* Sites */}
           <div className="space-y-1.5">
             <label htmlFor="sites-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
-              Resource Cap / Site Limit
+              Resource cap / site limit{REQUIRED}
             </label>
             <input
               id="sites-input"
@@ -162,21 +169,22 @@ export default function SetupPanel(props: SetupPanelProps) {
               placeholder="e.g. 4"
               disabled={isLocked}
               required
-              className="w-full text-sm border border-border-line p-2.5 rounded-xl font-mono text-ink placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none bg-surface-solid dark:bg-[#121620] disabled:opacity-60 disabled:bg-surface-solid/50 disabled:cursor-not-allowed transition-colors"
+              aria-required="true"
+              className={`${inputBase} p-2.5 font-mono`}
             />
           </div>
 
           {/* Equity Guidelines */}
           <div className="space-y-1.5 col-span-1 md:col-span-2">
             <label htmlFor="equity-goal-select" className="block text-xs font-bold text-muted uppercase tracking-wide">
-              Principal Equity Priority Target
+              Principal equity priority target
             </label>
             <select
               id="equity-goal-select"
               value={equityGoal}
               onChange={(e) => setEquityGoal(e.target.value)}
               disabled={isLocked}
-              className="w-full text-sm border border-border-line p-3 rounded-xl font-medium text-ink focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none bg-surface-solid dark:bg-[#121620] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              className={`${inputBase} p-3 font-medium cursor-pointer`}
             >
               <option value="Prioritize heat-vulnerable, low-AC, low-transit neighborhoods">
                 Prioritize heat-vulnerable, low-AC, low-transit neighborhoods
@@ -207,49 +215,50 @@ export default function SetupPanel(props: SetupPanelProps) {
               accept=".csv,.tsv,.txt"
               disabled={isLocked}
               onChange={handleFile}
-              className="w-full text-xs text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-accent/10 file:text-accent hover:file:bg-accent/20 file:cursor-pointer border border-dashed border-border-line rounded-xl p-2 bg-surface-solid dark:bg-[#121620] disabled:opacity-60 cursor-pointer transition-colors"
+              aria-describedby="dataset-hint"
+              className="w-full text-xs text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-accent-soft file:text-accent hover:file:opacity-80 file:cursor-pointer border border-dashed border-border-line rounded-xl p-2 bg-surface-2 disabled:opacity-60 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
             />
             {datasetName ? (
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              <p id="dataset-hint" className="text-xs text-positive font-semibold">
                 Grounded in {datasetName} — the agents will use your real figures and cite them.
               </p>
             ) : (
-              <p className="text-[10px] text-muted/70 leading-relaxed">
+              <p id="dataset-hint" className="text-xs text-faint leading-relaxed">
                 Upload real data (e.g. heat-vulnerability, AC, transit by tract) and the agents ground every number in it instead of estimating.
               </p>
             )}
           </div>
         </div>
 
-        {/* Call to action button */}
+        {/* Primary action */}
         {!isLocked && (
           <div className="pt-2">
             <button
               id="submit-pipeline-btn"
               type="submit"
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-accent to-accent-2 hover:opacity-90 active:scale-[0.99] text-white font-bold text-xs rounded-xl shadow-lg shadow-accent/20 transition-all flex items-center justify-center gap-2 outline-none cursor-pointer uppercase tracking-wider focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="w-full py-3.5 px-6 bg-accent text-on-accent hover:opacity-90 active:scale-[0.99] font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
-              <Play className="w-4 h-4 fill-current" />
-              Analyze Decision & Launch AI Copilot Pipeline
+              <Play className="w-4 h-4 fill-current" aria-hidden="true" />
+              Analyze decision &amp; launch the advisory pipeline
             </button>
           </div>
         )}
 
         {props.isPipelineRunning && (
-          <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl flex items-center gap-4 animate-pulse" id="running-hint-banner">
-            <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin shrink-0" />
-            <div className="text-xs text-ink/90 leading-relaxed">
-              <span className="font-bold text-accent mr-1">Pipeline Active:</span> Sequential AI simulation is modeling demographics, public datasets, and risk indicators. Please do not close this window.
+          <div className="p-4 bg-accent-soft border border-accent/20 rounded-xl flex items-center gap-4" id="running-hint-banner" role="status" aria-live="polite">
+            <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin shrink-0" aria-hidden="true" />
+            <div className="text-sm text-ink leading-relaxed">
+              <span className="font-bold text-accent mr-1">Pipeline active:</span> sequential AI advisory is modeling demographics, public datasets, and risk indicators. Please keep this window open.
             </div>
           </div>
         )}
 
         {props.isPipelineDone && (
-          <div className="p-4 bg-emerald-500/5 dark:bg-emerald-400/5 border border-emerald-500/20 dark:border-emerald-400/20 rounded-xl flex gap-3" id="completed-hint-banner">
-            <ShieldAlert className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-ink/95 leading-relaxed">
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">Recommendation Complete:</span> The 5 sequential advisory models have generated their framing, data grounding, spatial simulation, and equity audit. Under our safety guidelines,
-              <strong className="text-emerald-700 dark:text-emerald-400 font-semibold"> a Human Decision-Maker must now review, edit, and approve a choice</strong> in the panel below to save this decision or download the brief.
+          <div className="p-4 bg-positive/10 border border-positive/20 rounded-xl flex gap-3" id="completed-hint-banner" role="status" aria-live="polite">
+            <ShieldCheck className="w-5 h-5 text-positive shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="text-sm text-ink leading-relaxed">
+              <span className="font-bold text-positive">Advisory complete:</span> the five sequential models produced their framing, data grounding, spatial simulation, and equity audit.
+              <strong className="text-positive font-semibold"> A human decision-maker must now review, edit, and approve a choice</strong> in the panel below to save the decision or download the brief.
             </div>
           </div>
         )}

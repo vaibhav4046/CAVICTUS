@@ -48,90 +48,90 @@ export default function LedgerPanel({ items }: LedgerPanelProps) {
   if (items.length === 0) return null;
 
   return (
-    <section id="ledger-panel" className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold text-muted uppercase tracking-widest px-1 flex items-center gap-2">
-          <FileCheck2 className="w-3.5 h-3.5" />
-          Decision Ledger
+    <div className="bg-surface border border-border-line rounded-2xl shadow-sm p-5 space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+          <FileCheck2 className="w-4 h-4 text-accent" aria-hidden="true" />
+          Decision ledger
         </h3>
         <span className="text-[10px] font-mono text-muted">SHA-256 hash-chain · tamper-evident</span>
       </div>
 
-      <div className="bg-surface-solid border border-border-line rounded-2xl p-5 space-y-4">
-        <p className="text-xs text-muted leading-relaxed">
-          Every finalized decision is hashed over its record plus the previous hash. Edit any record
-          and its hash — and every link after it — breaks. Verifiable in-browser, no server trust.
-        </p>
+      <p className="text-sm text-muted leading-relaxed">
+        Every finalized decision is hashed over its record plus the previous hash. Edit any record and
+        its hash — and every link after it — breaks. Verifiable in-browser, no server trust.
+      </p>
 
-        {building ? (
-          <div className="flex items-center gap-2 text-xs text-muted py-3">
-            <Loader2 className="w-4 h-4 animate-spin" /> Computing chain…
-          </div>
-        ) : (
-          <div className="rounded-xl border border-border-line overflow-hidden">
-            <div className="max-h-44 overflow-y-auto divide-y divide-border-line">
-              {entries.map((e) => (
-                <div key={e.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-surface-solid">
-                  <span className="text-[10px] font-mono text-muted w-6 shrink-0">#{e.index}</span>
-                  <Link2 className="w-3 h-3 text-muted/60 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold text-ink truncate">{e.title}</p>
-                    <p className="text-[10px] font-mono text-muted truncate">{short(e.hash)}</p>
-                  </div>
-                  <span className="text-[9px] font-mono uppercase text-muted shrink-0">{e.decision.replace(/_/g, " ")}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={onVerify}
-            disabled={busy || building}
-            className="inline-flex items-center gap-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 font-semibold text-xs px-4 py-2 rounded-lg transition-all"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            Verify integrity
-          </button>
-          <button
-            onClick={onTamper}
-            disabled={busy || building}
-            className="inline-flex items-center gap-2 bg-surface border border-border-line text-ink hover:bg-surface/60 disabled:opacity-50 font-semibold text-xs px-4 py-2 rounded-lg transition-all"
-          >
-            <TriangleAlert className="w-4 h-4 text-amber-500" />
-            Run tamper simulation
-          </button>
+      {building ? (
+        <div className="flex items-center gap-2 text-sm text-muted py-3" role="status" aria-live="polite">
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Computing chain…
         </div>
+      ) : (
+        <div className="rounded-xl border border-border-line overflow-hidden">
+          <div className="max-h-44 overflow-y-auto divide-y divide-border-line">
+            {entries.map((e) => (
+              <div key={e.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-surface-2">
+                <span className="text-[10px] font-mono text-muted w-6 shrink-0">#{e.index}</span>
+                <Link2 className="w-3 h-3 text-faint shrink-0" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-ink truncate">{e.title}</p>
+                  <p className="text-[10px] font-mono text-muted truncate" aria-label={`Full hash: ${e.hash}`}>
+                    {short(e.hash)}
+                  </p>
+                </div>
+                <span className="text-[9px] font-mono uppercase text-muted shrink-0">{e.decision.replace(/_/g, " ")}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-        {status === "verified" && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-            <ShieldCheck className="w-4 h-4" />
-            Verified — {entries.length} records, chain intact.
-          </div>
-        )}
-        {status === "broken" && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
-            <TriangleAlert className="w-4 h-4" />
-            Integrity check failed — a record was altered.
-          </div>
-        )}
-
-        {tamper && (
-          <div className="text-xs bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2.5 space-y-1">
-            <p className="font-semibold text-amber-600 dark:text-amber-400">
-              Tamper detected at record #{tamper.index} ({tamper.title})
-            </p>
-            <p className="font-mono text-[10px] text-muted break-all">
-              {short(tamper.before)} → {short(tamper.after)}
-            </p>
-            <p className="text-[11px] text-ink/80">
-              Editing one record invalidated <strong>{tamper.invalidated}</strong> downstream{" "}
-              {tamper.invalidated === 1 ? "link" : "links"}. The chain makes silent edits impossible to hide.
-            </p>
-          </div>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={onVerify}
+          disabled={busy || building}
+          className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 disabled:opacity-50 font-semibold text-xs px-4 py-2 rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
+          <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+          Verify integrity
+        </button>
+        <button
+          onClick={onTamper}
+          disabled={busy || building}
+          className="inline-flex items-center gap-2 bg-surface border border-border-line text-ink hover:bg-surface-2 disabled:opacity-50 font-semibold text-xs px-4 py-2 rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
+          <TriangleAlert className="w-4 h-4 text-warning" aria-hidden="true" />
+          Run tamper simulation — see why it can't be faked
+        </button>
       </div>
-    </section>
+
+      {status === "verified" && (
+        <div className="flex items-center gap-2 text-xs font-semibold text-positive bg-positive/10 border border-positive/20 rounded-lg px-3 py-2" role="status">
+          <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+          Verified — {entries.length} records, chain intact.
+        </div>
+      )}
+      {status === "broken" && (
+        <div className="flex items-center gap-2 text-xs font-semibold text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2" role="alert">
+          <TriangleAlert className="w-4 h-4" aria-hidden="true" />
+          Integrity check failed — a record was altered.
+        </div>
+      )}
+
+      {tamper && (
+        <div className="text-sm bg-warning/10 border border-warning/20 rounded-lg px-3 py-2.5 space-y-1" role="status">
+          <p className="font-semibold text-warning">
+            Tamper detected at record #{tamper.index} ({tamper.title})
+          </p>
+          <p className="font-mono text-[10px] text-muted break-all">
+            {short(tamper.before)} → {short(tamper.after)}
+          </p>
+          <p className="text-xs text-ink">
+            Editing one record invalidated <strong>{tamper.invalidated}</strong> downstream{" "}
+            {tamper.invalidated === 1 ? "link" : "links"}. The chain makes silent edits impossible to hide.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

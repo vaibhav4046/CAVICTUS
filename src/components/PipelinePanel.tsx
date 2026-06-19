@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, ShieldAlert, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ShieldAlert, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { AgentState, PipelineOutputs } from "../types";
 import { parseMarkdownSections, extractMemoryNote, getConfidencePill } from "../utils";
@@ -19,6 +19,8 @@ interface PipelinePanelProps {
 
 export default function PipelinePanel(props: PipelinePanelProps) {
   const shouldReduceMotion = useReducedMotion();
+  // Completed cards start collapsed by default (calm pipeline column).
+  // Running / queued cards are never collapsed.
   const [collapsedCards, setCollapsedCards] = useState<Record<number, boolean>>({});
 
   const toggleCollapse = (num: number) => {
@@ -121,9 +123,9 @@ export default function PipelinePanel(props: PipelinePanelProps) {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-accent dark:text-accent-2 hover:underline inline-flex items-center gap-0.5 font-semibold"
+              className="text-accent hover:underline inline-flex items-center gap-0.5 font-semibold"
             >
-              {match[4]} <span className="text-[9px]">↗</span>
+              {match[4]} <span className="text-xs" aria-hidden="true">↗</span>
             </a>
           );
         } else {
@@ -152,9 +154,9 @@ export default function PipelinePanel(props: PipelinePanelProps) {
     }
 
     const sections = parseMarkdownSections(textToParse);
-    
+
     if (sections.length === 0) {
-      return <p className="text-xs text-muted italic">Synthesizing detailed advisory outputs...</p>;
+      return <p className="text-sm text-muted italic">Synthesizing detailed advisory outputs...</p>;
     }
 
     return (
@@ -174,18 +176,20 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             if (tableLines.length >= 2) {
               const headers = tableLines[0].split("|").map(s => s.trim()).filter(Boolean);
               const isSeparator = (line: string) => line.includes("---") || line.includes("-:-");
-              
+
               const dataRows = tableLines.slice(1).filter(l => !isSeparator(l)).map(row => {
                 return row.split("|").map(s => s.trim()).filter(Boolean);
               });
 
               contentNode = (
                 <div className="overflow-x-auto my-3 border border-border-line rounded-xl">
-                  <table className="w-full text-xs font-mono text-left border-collapse bg-surface-solid dark:bg-[#121620]">
+                  {/* R1: bg-surface-solid replaces bg-surface-solid + dark:bg-[#121620] */}
+                  <table className="w-full text-sm font-mono text-left border-collapse bg-surface-solid">
                     <thead>
-                      <tr className="bg-surface/50 border-b border-border-line">
+                      {/* R1: bg-surface-2 replaces bg-surface/50 */}
+                      <tr className="bg-surface-2 border-b border-border-line">
                         {headers.map((h, i) => (
-                          <th key={i} className="px-3.5 py-2.5 font-bold text-ink uppercase tracking-wider text-[10px]">
+                          <th key={i} className="px-3.5 py-2.5 font-bold text-ink uppercase tracking-wider text-xs">
                             {h}
                           </th>
                         ))}
@@ -193,9 +197,11 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                     </thead>
                     <tbody className="divide-y divide-border-line">
                       {dataRows.map((cols, i) => (
-                        <tr key={i} className="hover:bg-surface/30 transition-all">
+                        // R1: hover:bg-surface-2 replaces hover:bg-surface/30
+                        <tr key={i} className="hover:bg-surface-2 transition-all">
                           {cols.map((col, cIdx) => (
-                            <td key={cIdx} className="px-3.5 py-2 text-ink/90 whitespace-nowrap">
+                            // R1: text-ink replaces text-ink/90
+                            <td key={cIdx} className="px-3.5 py-2 text-ink whitespace-nowrap">
                               {col}
                             </td>
                           ))}
@@ -216,7 +222,8 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             const flushList = (key: number) => {
               if (currentList.length > 0) {
                 renderedLines.push(
-                  <ul key={`list-${key}`} className="list-disc pl-5 my-2.5 space-y-1.5 text-ink/90 text-xs">
+                  // R1: text-ink replaces text-ink/90; R2: text-sm (was text-xs)
+                  <ul key={`list-${key}`} className="list-disc pl-5 my-2.5 space-y-1.5 text-ink text-sm">
                     {currentList.map((item, itemIdx) => (
                       <li key={itemIdx} className="leading-relaxed">
                         {renderFormattedLine(item)}
@@ -235,7 +242,8 @@ export default function PipelinePanel(props: PipelinePanelProps) {
               } else if (trimmed.match(/^\d+\.\s+/)) {
                 flushList(lineIdx);
                 renderedLines.push(
-                  <p key={lineIdx} className="text-xs text-ink/90 my-1.5 pl-1 leading-relaxed">
+                  // R2: text-sm (was text-xs); R1: text-ink (was text-ink/90)
+                  <p key={lineIdx} className="text-sm text-ink my-1.5 pl-1 leading-relaxed">
                     {renderFormattedLine(trimmed)}
                   </p>
                 );
@@ -244,7 +252,8 @@ export default function PipelinePanel(props: PipelinePanelProps) {
               } else {
                 flushList(lineIdx);
                 renderedLines.push(
-                  <p key={lineIdx} className="text-xs text-ink/90 leading-relaxed my-2">
+                  // R2: text-sm (was text-xs); R1: text-ink (was text-ink/90)
+                  <p key={lineIdx} className="text-sm text-ink leading-relaxed my-2">
                     {renderFormattedLine(trimmed)}
                   </p>
                 );
@@ -263,7 +272,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 className="my-4 p-4 bg-surface border border-border-line rounded-xl space-y-2 border-l-4 border-l-muted shadow-sm"
               >
                 <h4 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5 font-display">
-                  <ShieldAlert className="w-4 h-4 text-muted" />
+                  <ShieldAlert className="w-4 h-4 text-muted" aria-hidden="true" />
                   {section.title}
                 </h4>
                 {contentNode}
@@ -275,10 +284,11 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             return (
               <div
                 key={idx}
-                className="my-4 p-4 bg-amber-500/5 dark:bg-amber-400/5 border border-amber-500/20 rounded-xl space-y-2 border-l-4 border-l-amber-500 shadow-sm"
+                // R1: bg-warning/10 + border-warning/20 replace raw amber fractional classes
+                className="my-4 p-4 bg-warning/10 border border-warning/20 rounded-xl space-y-2 border-l-4 border-l-warning shadow-sm"
               >
-                <h4 className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider flex items-center gap-1.5 font-display">
-                  <ShieldAlert className="w-4 h-4 text-amber-500" />
+                <h4 className="text-xs font-bold text-warning uppercase tracking-wider flex items-center gap-1.5 font-display">
+                  <ShieldAlert className="w-4 h-4 text-warning" aria-hidden="true" />
                   {section.title}
                 </h4>
                 {contentNode}
@@ -290,7 +300,8 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             <div key={idx} className="space-y-1.5">
               {section.title && (
                 <h4 className={`text-xs font-bold uppercase tracking-wider mt-5 first:mt-1 font-display ${
-                  section.level === 3 ? "text-muted text-[10px]" : "text-ink border-b border-dashed border-border-line pb-1"
+                  // R2: text-xs allowed here (section sub-heading label); text-muted is solid token
+                  section.level === 3 ? "text-muted text-xs" : "text-ink border-b border-dashed border-border-line pb-1"
                 }`}>
                   {section.title}
                 </h4>
@@ -305,6 +316,17 @@ export default function PipelinePanel(props: PipelinePanelProps) {
 
   return (
     <section id="pipeline-panel" className="space-y-6">
+      {/* C3: aria-live region announces agent status transitions */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" id="agent-status-announcer">
+        {Object.entries(props.agentStates).map(([num, state]) => {
+          const label = agentsConfig.find(a => a.num === Number(num))?.title ?? `Agent ${num}`;
+          if (state.status === "running") return `${label} is running.`;
+          if (state.status === "done") return `${label} completed.`;
+          if (state.status === "error") return `${label} encountered an error.`;
+          return null;
+        }).filter(Boolean).join(" ")}
+      </div>
+
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-bold text-muted uppercase tracking-widest px-1">
           2. Sequential Multi-Agent Advisory Panel
@@ -320,107 +342,178 @@ export default function PipelinePanel(props: PipelinePanelProps) {
           const isDone = state.status === "done";
           const isError = state.status === "error";
 
+          // Completed cards are collapsed by default; user can expand.
+          // Running and queued cards are always open.
+          const isBodyCollapsed = isDone
+            ? (collapsedCards[agent.num] !== false) // default true for done
+            : (isError ? (collapsedCards[agent.num] !== false) : false);
+
           // Format streaming text
           const cleanedOutput = state.output;
           const memoryDetails = agent.num === 1 ? extractMemoryNote(state.output) : null;
           const confidence = agent.num === 5 ? getConfidencePill(state.output) : null;
 
+          // M8: gate spring/duration transitions behind shouldReduceMotion
+          const motionVariants = {
+            queued: { opacity: 0.6, y: shouldReduceMotion ? 0 : 20 },
+            running: {
+              opacity: 1,
+              y: 0,
+              transition: shouldReduceMotion
+                ? { duration: 0 }
+                : { duration: 0.3 },
+            },
+            done: {
+              opacity: 1,
+              y: 0,
+              transition: shouldReduceMotion
+                ? { duration: 0 }
+                : { type: "spring" as const, stiffness: 300, damping: 30 },
+            },
+            error: { opacity: 1, y: 0, transition: { duration: shouldReduceMotion ? 0 : 0.2 } },
+          };
+
+          // One-line summary shown when done card is collapsed
+          const collapsedSummary = isDone && cleanedOutput
+            ? cleanedOutput.replace(/\[METADATA_JSON:[^\]]+\]/, "").replace(/#+\s*/g, "").trim().slice(0, 90) + "…"
+            : null;
+
+          const bodyId = `agent-body-${agent.num}`;
+
           return (
             <motion.div
               initial="queued"
               animate={state.status}
-              variants={{
-                queued: { opacity: 0.6, y: shouldReduceMotion ? 0 : 20 },
-                running: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-                done: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
-                error: { opacity: 1, y: 0 }
-              }}
+              variants={motionVariants}
               key={agent.num}
               id={`agent-card-${agent.num}`}
-              className={`bg-surface-solid border rounded-2xl overflow-hidden shadow-lg shadow-black/[0.01] transition-all duration-300 flex flex-col ${
-                isQueued ? "border-border-line opacity-60 bg-surface-solid/45" : "border-border-line"
+              className={`bg-surface border rounded-2xl overflow-hidden shadow-md transition-all duration-300 flex flex-col ${
+                // R1: bg-surface-solid/45 -> bg-surface (solid); raw red-500 fractions -> danger token
+                isQueued ? "border-border-line opacity-60 bg-surface" : "border-border-line"
               } ${
-                isRunning ? "ring-2 ring-accent/30 border-accent scale-[1.01] shadow-xl shadow-accent/5 bg-surface-solid" : ""
+                // R1: ring-accent/30 + shadow-accent/5 kept as tint bg; bg-surface-solid -> bg-surface
+                isRunning ? "ring-2 ring-accent/30 border-accent scale-[1.01] shadow-lg bg-surface" : ""
               } ${
-                isDone ? "bg-surface-solid" : ""
-              } ${isError ? "bg-red-500/5 border-red-500/35" : ""}`}
+                isDone ? "bg-surface" : ""
+              } ${isError ? "bg-danger/5 border-danger/20" : ""}`}
             >
-              {/* Card Header Banner with color accents */}
-              <div 
+              {/* Card Header Banner — collapsible trigger */}
+              {/* C2: aria-expanded, aria-controls, aria-label on every header */}
+              <div
                 className={`p-4 border-b border-border-line flex flex-col justify-between shrink-0 min-h-[96px] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
-                  isDone ? "bg-surface/20 hover:bg-surface/30" : isRunning ? "bg-accent/5 hover:bg-accent/10" : "bg-surface-solid"
+                  // R1: bg-surface/20 -> bg-surface-2; bg-accent/5 -> bg-accent-soft is not available, use bg-surface-2
+                  isDone ? "bg-surface-2 hover:bg-surface-2" : isRunning ? "bg-surface-2 hover:bg-surface-2" : "bg-surface"
                 }`}
-                onClick={() => { if (!isQueued) toggleCollapse(agent.num) }}
+                onClick={() => { if (!isQueued) toggleCollapse(agent.num); }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     if (!isQueued) toggleCollapse(agent.num);
                   }
                 }}
                 role="button"
                 tabIndex={isQueued ? -1 : 0}
-                aria-expanded={!collapsedCards[agent.num]}
+                aria-expanded={!isBodyCollapsed}
+                aria-controls={bodyId}
+                aria-label={`${agent.title}: ${state.status}. ${isBodyCollapsed ? "Expand" : "Collapse"} output.`}
               >
                 <div className="flex items-start justify-between w-full gap-2">
-                  <h4 className="text-xs font-bold text-ink leading-tight font-display">
+                  {/* R2: font-display title at text-base outranks labels */}
+                  <h4 className="text-base font-bold text-ink leading-tight font-display">
                     {agent.title}
                   </h4>
-                  
-                  {/* Clean bullet-style status badges */}
-                  <span className="flex items-center gap-1 text-[9px] font-mono font-bold uppercase tracking-wider shrink-0 mt-0.5">
+
+                  {/* Status badges — R3: replace ○/● glyphs with styled span dots */}
+                  <span className="flex items-center gap-1 text-xs font-mono font-bold uppercase tracking-wider shrink-0 mt-0.5">
                     {isQueued && (
-                      <span className="text-muted/65 flex items-center gap-1">○ Q</span>
+                      <span className="text-muted flex items-center gap-1">
+                        {/* R3: ○ replaced with styled span dot */}
+                        <span className="w-2 h-2 rounded-full bg-muted inline-block opacity-40" aria-hidden="true" />
+                        Q
+                      </span>
                     )}
                     {isRunning && (
                       <span className="text-accent animate-pulse flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block animate-[ping_1.2s_infinite]" />
-                        ● RUN
+                        <span className="w-2 h-2 rounded-full bg-accent inline-block animate-[ping_1.2s_infinite]" aria-hidden="true" />
+                        RUN
                       </span>
                     )}
                     {isDone && (
-                      <span className="text-emerald-500 flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                      <span className="text-positive flex items-center gap-1">
+                        <Check className="w-3 h-3 text-positive shrink-0" aria-hidden="true" />
                         OK
                       </span>
                     )}
                     {isError && (
-                      <span className="text-red-500 flex items-center gap-1">● ERR</span>
+                      <span className="text-danger flex items-center gap-1">
+                        {/* R3: ● replaced with styled span dot */}
+                        <span className="w-2 h-2 rounded-full bg-danger inline-block" aria-hidden="true" />
+                        ERR
+                      </span>
                     )}
                     {(!isQueued && !isRunning) && (
                       <span className="ml-1 text-muted">
-                        {collapsedCards[agent.num] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                        {isBodyCollapsed
+                          ? <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+                          : <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
+                        }
                       </span>
                     )}
                   </span>
                 </div>
-                <p className="text-[10px] text-muted font-semibold leading-tight mt-2 pb-0.5">
+
+                {/* R2: tagline at text-sm (was text-[10px]) */}
+                <p className="text-sm text-muted font-semibold leading-tight mt-2 pb-0.5">
                   {agent.tagline}
                 </p>
+
+                {/* One-line collapsed summary for done cards */}
+                {isDone && isBodyCollapsed && collapsedSummary && (
+                  <p className="text-xs text-faint mt-1 truncate leading-snug pr-6">
+                    {collapsedSummary}
+                  </p>
+                )}
               </div>
 
-              {/* Card Body content */}
-              {(!collapsedCards[agent.num] || isRunning || isQueued) && (
-              <div className={`p-4 space-y-4 flex-1 flex flex-col justify-start text-xs ${
-                isRunning || isDone ? "bg-surface-solid" : "bg-surface-solid/40"
-              }`}>
+              {/* Card Body — hidden when done/error card is collapsed */}
+              {/* C3: aria-live on completed output region */}
+              {(!isBodyCollapsed || isRunning || isQueued) && (
+              <div
+                id={bodyId}
+                aria-live={isRunning ? "polite" : undefined}
+                aria-label={isDone ? `${agent.title} completed output` : undefined}
+                className={`p-4 space-y-4 flex-1 flex flex-col justify-start text-sm ${
+                  // R1: bg-surface-solid/40 -> bg-surface; bg-surface-solid -> bg-surface
+                  isRunning || isDone ? "bg-surface" : "bg-surface"
+                }`}
+              >
                 {/* 1. Memory note display box specifically for Frame agent (Agent 1) */}
                 {agent.num === 1 && memoryDetails?.note && (
-                  <div className="p-3 bg-accent/5 border border-accent/15 rounded-xl text-[10.5px] text-ink/90 leading-relaxed" id="agent-1-memory-banner">
-                    <span className="font-bold block text-accent mb-0.5">ℹ Informed by Past Decision:</span>
+                  // R1: bg-accent/5 -> bg-surface-2; border-accent/15 -> border-accent; text-ink/90 -> text-ink
+                  <div className="p-3 bg-surface-2 border border-accent rounded-xl text-sm text-ink leading-relaxed" id="agent-1-memory-banner">
+                    <span className="font-bold flex items-center gap-1 text-accent mb-0.5">
+                      {/* R3: ℹ glyph replaced with lucide Info */}
+                      <Info className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      Informed by Past Decision:
+                    </span>
                     A previous human-approved decision prioritized <strong className="font-bold underline text-ink">{memoryDetails.rationale}</strong>.
                   </div>
                 )}
 
                 {/* 2. Confidence Pill specifically for Chief of staff brief (Agent 5) */}
                 {agent.num === 5 && confidence && (
-                  <div className="flex items-center justify-between gap-2 border border-border-line p-2 bg-surface/30 rounded-xl" id="agent-5-confidence-pill">
-                    <span className="font-bold text-muted uppercase tracking-wider text-[8.5px]">Advisory Quality:</span>
-                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase shrink-0 ${
+                  // R1: bg-surface/30 -> bg-surface-2
+                  <div className="flex items-center justify-between gap-2 border border-border-line p-2 bg-surface-2 rounded-xl" id="agent-5-confidence-pill">
+                    <span className="font-bold text-muted uppercase tracking-wider text-xs">Advisory Quality:</span>
+                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border uppercase shrink-0 ${
                       confidence === "high"
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                        // R1: bg-emerald-500/10 -> bg-positive/10; border-emerald-500/20 -> border-positive/20; text-emerald-500 -> text-positive
+                        ? "bg-positive/10 border-positive/20 text-positive"
                         : confidence === "medium"
-                        ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
-                        : "bg-rose-500/10 border-rose-500/20 text-rose-500"
+                        // R1: amber fractions -> warning token
+                        ? "bg-warning/10 border-warning/20 text-warning"
+                        // R1: rose fractions -> danger token
+                        : "bg-danger/10 border-danger/20 text-danger"
                     }`}>
                       {confidence}
                     </span>
@@ -429,24 +522,27 @@ export default function PipelinePanel(props: PipelinePanelProps) {
 
                 {/* Content states */}
                 {isQueued && (
-                  <div className="py-12 text-center flex-1 flex items-center justify-center bg-surface/5" id={`queued-placeholder-${agent.num}`}>
-                    <p className="text-[10px] text-muted/50 font-mono tracking-widest uppercase">READY</p>
+                  // R1: bg-surface/5 -> bg-surface (solid, de-emphasized via text-faint)
+                  <div className="py-12 text-center flex-1 flex items-center justify-center bg-surface" id={`queued-placeholder-${agent.num}`}>
+                    <p className="text-xs text-faint font-mono tracking-widest uppercase">READY</p>
                   </div>
                 )}
 
                 {isRunning && (
                   <div className="space-y-3 flex-1 flex flex-col justify-center" id={`running-loader-${agent.num}`}>
                     {cleanedOutput ? (
-                      <div className="prose prose-sm max-w-none text-[11px] leading-relaxed text-ink/90 select-text bg-surface/20 p-3 border border-dashed border-border-line rounded-xl">
+                      // R1: bg-surface/20 -> bg-surface-2; R2: text-[11px] -> text-sm; text-ink/90 -> text-ink
+                      <div className="prose prose-sm max-w-none text-sm leading-relaxed text-ink select-text bg-surface-2 p-3 border border-dashed border-border-line rounded-xl">
                         {renderMarkdownText(cleanedOutput, props.groundingSources)}
                       </div>
                     ) : (
                       <div className="space-y-2.5">
-                        <div className="flex items-center gap-2 text-[10px] text-accent font-bold uppercase tracking-wider">
-                          <div className="w-2.5 h-2.5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                        {/* R2: text-[10px] -> text-xs (minimum for badges) */}
+                        <div className="flex items-center gap-2 text-xs text-accent font-bold uppercase tracking-wider">
+                          <div className="w-2.5 h-2.5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-hidden="true" />
                           <span>Thinking...</span>
                         </div>
-                        <div className="h-1 bg-surface rounded-full overflow-hidden">
+                        <div className="h-1 bg-surface-2 rounded-full overflow-hidden">
                           <div className="h-full bg-accent animate-[pulse_1.5s_infinite] w-2/3" />
                         </div>
                       </div>
@@ -455,16 +551,20 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 )}
 
                 {isError && (
-                  <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-center space-y-2.5" id={`error-wrapper-${agent.num}`}>
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-red-500 block">
+                  // R1: bg-red-500/5 -> bg-danger/5; border-red-500/20 -> border-danger/20
+                  <div className="p-3 bg-danger/5 border border-danger/20 rounded-xl text-center space-y-2.5" id={`error-wrapper-${agent.num}`}>
+                    {/* R2: text-[10px] -> text-sm; text-red-500 -> text-danger */}
+                    <span className="text-sm font-bold uppercase tracking-wide text-danger block">
                       Execution Error
                     </span>
-                    <p className="text-[10px] text-muted leading-relaxed font-semibold">
+                    {/* R2: text-[10px] -> text-sm */}
+                    <p className="text-sm text-muted leading-relaxed font-semibold">
                       {state.error || "A connection timeout occurred."}
                     </p>
+                    {/* R4: danger button style */}
                     <button
                       onClick={() => props.onRetryAgent(agent.num)}
-                      className="py-1 px-3 bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] rounded-lg cursor-pointer transition-colors w-full uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-solid focus-visible:ring-red-500"
+                      className="py-1.5 px-3 text-danger border border-danger/30 hover:bg-danger/10 font-bold text-sm rounded-lg cursor-pointer transition-colors w-full uppercase focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
                     >
                       Retry
                     </button>
@@ -472,7 +572,12 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 )}
 
                 {isDone && (
-                  <div className="prose prose-sm max-w-none text-ink select-text flex-1 overflow-x-auto leading-relaxed">
+                  // C3: aria-live="polite" for completed output
+                  <div
+                    className="prose prose-sm max-w-none text-ink select-text flex-1 overflow-x-auto leading-relaxed"
+                    aria-live="polite"
+                    aria-label={`${agent.title} output`}
+                  >
                     {renderMarkdownText(cleanedOutput, props.groundingSources)}
                   </div>
                 )}
