@@ -20,7 +20,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border-line bg-surface">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600 animate-pulse" />
+            <Sparkles className="w-5 h-5 text-accent animate-pulse" />
             <h2 id="modal-title" className="text-xl font-display font-semibold text-ink">
               How CIVICTAS Works
             </h2>
@@ -98,7 +98,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
           </div>
 
           <div className="p-4 rounded-xl border border-border-line bg-surface flex gap-3">
-            <UserCheck className="w-6 h-6 text-indigo-600 shrink-0 mt-0.5" />
+            <UserCheck className="w-6 h-6 text-accent shrink-0 mt-0.5" />
             <div className="text-xs text-muted leading-relaxed">
                <span className="font-semibold text-ink block mb-1">AI-Assisted · Human-Decided</span>
                CIVICTAS operates under the strict philosophy that AI should only advise and model uncertainty, leaving political compromise, budget limits, ethical choices, and accountability exclusively to humans.
@@ -111,7 +111,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
           <button
             id="modal-understand-btn"
             onClick={props.onClose}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-indigo-500/20 outline-none"
+            className="px-4 py-2 bg-accent hover:opacity-90 text-white font-medium text-sm rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-accent/20 outline-none"
           >
             I Understand the Protocol
           </button>

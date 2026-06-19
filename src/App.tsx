@@ -990,7 +990,7 @@ export default function App() {
       
       {/* Calm, flat background. In dark mode only, one barely-there static glow. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 hidden dark:block" aria-hidden="true">
-        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-indigo-500/5 blur-[140px]" />
+        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-teal-500/5 blur-[140px]" />
       </div>
 
       {/* Premium Top Navigation bar */}
@@ -1035,7 +1035,7 @@ export default function App() {
 
           {engine && (
             <span
-              className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/20"
+              className="inline-flex items-center gap-1.5 text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2.5 py-1 rounded-full border border-emerald-500/20"
               title={`Engine: ${engine.provider} · ${engine.model}${engine.search ? " · web search on" : ""}`}
             >
               <Cpu className="w-3 h-3" />
