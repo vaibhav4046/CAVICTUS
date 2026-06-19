@@ -196,7 +196,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
               className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-500 px-3 py-1.5 rounded-xl border border-emerald-500/25"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              ✓ DECISION FINALIZED BY HUMAN
+              DECISION FINALIZED BY HUMAN
             </span>
           ) : (
             <span
@@ -602,28 +602,6 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
               </a>
             </div>
           )}
-
-          {/* C. Pilot enhancement Inbound reply stub */}
-          <div className="border border-border-line p-4 rounded-xl space-y-2 bg-surface/20 text-[10px] select-none">
-            <span className="font-bold text-ink uppercase tracking-wide block font-display">
-              Inbound 2-way callback (Pilot)
-            </span>
-            <p className="text-[9.5px] text-muted leading-normal leading-relaxed">
-              Allows reviewers to approve or reject straight from WhatsApp/Telegram updates without opening the dashboard, using integrated inbound chat updates.
-            </p>
-            <div className="space-y-1 mt-1 shrink-0">
-              <label className="text-[9px] text-muted uppercase font-semibold">Inbound Callback API</label>
-              <input
-                type="text"
-                disabled
-                value="https://api.civictas.org/v1/inbound/reply?key=sandbox-demo"
-                className="w-full text-[9px] font-mono border border-border-line bg-surface/40 p-1.5 rounded-lg text-muted select-all outline-none"
-              />
-            </div>
-            <span className="inline-block text-[9px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded font-mono">
-              ★ PILOT SCHEDULER DEPLOYED
-            </span>
-          </div>
 
           {/* Core guardrails validation text */}
           <div className="flex gap-1.5 p-3 rounded-lg border border-border-line bg-surface/15 text-[10px] select-none leading-relaxed text-muted italic">

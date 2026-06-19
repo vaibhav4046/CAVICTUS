@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, CheckCircle2, SquarePen } from "lucide-react";
 import { DecisionMemoryItem } from "../types";
 
 interface SidebarProps {
@@ -79,9 +79,9 @@ export default function Sidebar(props: SidebarProps) {
                 >
                   <div className="flex items-start gap-2.5">
                     {isApproved ? (
-                      <span className="text-emerald-500 font-bold text-xs mt-0.5">✓</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                     ) : (
-                      <span className="text-amber-500 font-bold text-xs mt-0.5">✎</span>
+                      <SquarePen className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                     )}
                     <div className="truncate flex-1 min-w-0">
                       <h4 className="text-[13px] font-bold text-ink truncate leading-snug">
