@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Users, Gavel, Send, Loader2, AlertTriangle } from "lucide-react";
+import RealityPill, { type RealityKind } from "./RealityPill";
+
+const channelReality = (c: ChannelStatus): { kind: RealityKind; label: string } => {
+  if (c.configured && c.ok) return { kind: "live", label: "live" };
+  if (c.configured) return { kind: "error", label: "error" };
+  return { kind: "simulated", label: "simulated" };
+};
 
 interface Dissent {
   persona: string;
@@ -175,21 +182,18 @@ export default function CouncilPanel(props: CouncilPanelProps) {
             <Send className="w-3.5 h-3.5" aria-hidden="true" /> Reviewer notified via
           </span>
           <div className="flex flex-wrap gap-2 mt-2">
-            {props.channels.map((c) => (
-              <span
-                key={c.channel}
-                title={c.detail}
-                className={`text-[10px] font-mono px-2 py-1 rounded-lg border ${
-                  c.configured && c.ok
-                    ? "bg-positive/10 text-positive border-positive/20"
-                    : c.configured
-                    ? "bg-danger/10 text-danger border-danger/20"
-                    : "bg-surface-2 text-muted border-border-line"
-                }`}
-              >
-                {c.channel} · {c.configured && c.ok ? "live" : c.configured ? "error" : "simulated"}
-              </span>
-            ))}
+            {props.channels.map((c) => {
+              const r = channelReality(c);
+              return (
+                <RealityPill
+                  key={c.channel}
+                  kind={r.kind}
+                  label={r.label}
+                  prefix={c.channel}
+                  title={c.detail}
+                />
+              );
+            })}
           </div>
         </div>
       )}

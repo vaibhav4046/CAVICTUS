@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { runAgentStream, resolveProvider, type AgentBody, type Source } from "./lib/agents.js";
+import { runAgentStream, resolveProvider, providerInfo, type AgentBody, type Source } from "./lib/agents.js";
 
 dotenv.config();
 
@@ -22,7 +22,8 @@ async function startServer() {
 
   // Lightweight diagnostics — which provider is active, no secrets exposed.
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, provider: resolveProvider() });
+    // `engine` is the secret-free description the UI badge + harness trace read.
+    res.json({ ok: true, engine: providerInfo(), provider: resolveProvider() });
   });
 
   // API Route for running a step of the decision pipeline

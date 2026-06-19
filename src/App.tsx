@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { HelpCircle, FileText, Cpu, Sun, Moon, Check, ChevronDown, ChevronRight, PanelLeft } from "lucide-react";
+import { HelpCircle, FileText, Cpu, Sun, Moon, Check, ChevronDown, ChevronRight, PanelLeft, Activity } from "lucide-react";
 
 import Sidebar from "./components/Sidebar";
 import BrandMark from "./components/BrandMark";
@@ -15,8 +15,19 @@ import Landing from "./components/Landing";
 import Onboarding from "./components/Onboarding";
 import VoiceAgent from "./components/VoiceAgent";
 import LedgerPanel from "./components/LedgerPanel";
+import RealityPill from "./components/RealityPill";
+import PipelineErrorAlert from "./components/PipelineErrorAlert";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
-import { downloadDecisionBrief, getConfidencePill } from "./utils";
+import { downloadDecisionBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
+
+// Friendly labels for the five advisory agents, used when surfacing a failure.
+const AGENT_LABELS: Record<number, string> = {
+  1: "Agent 1 — Framing",
+  2: "Agent 2 — Evidence base",
+  3: "Agent 3 — Simulation",
+  4: "Agent 4 — Audit",
+  5: "Agent 5 — Plan brief",
+};
 
 export default function App() {
   const [memoryItems, setMemoryItems] = useState<DecisionMemoryItem[]>([]);
@@ -147,6 +158,9 @@ export default function App() {
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [isPipelineDone, setIsPipelineDone] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false);
+  // Honest failure surface: set when an agent step throws so the UI shows the
+  // real reason instead of silently reverting to the setup form.
+  const [pipelineError, setPipelineError] = useState<PipelineFailure | null>(null);
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
   const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
@@ -465,6 +479,7 @@ export default function App() {
     setIsPipelineRunning(true);
     setIsPipelineDone(false);
     setIsFinalized(false);
+    setPipelineError(null);
     setGroundingSources([]);
     setChannels([]);
     setDataset(ds || "");
@@ -498,7 +513,11 @@ export default function App() {
         .join("\n\n");
     }
 
+    // Track which step is in flight so a thrown error can name the right agent.
+    let activeStep = 1;
+
     const executeStep = async (stepNum: number, currentOutputs: Record<string, string>): Promise<string> => {
+      activeStep = stepNum;
       setAgentStates((prev) => ({
         ...prev,
         [stepNum]: { status: "running", output: "" },
@@ -610,6 +629,7 @@ export default function App() {
     } catch (error: any) {
       console.error("Workflow interruption:", error);
       setIsPipelineRunning(false);
+      // Land the in-flight agent in "error" status so its card stays visible.
       setAgentStates((prev) => {
         const updated = { ...prev };
         for (const k of [1, 2, 3, 4, 5]) {
@@ -623,6 +643,10 @@ export default function App() {
         }
         return updated;
       });
+      // Surface the real failure reason near the pipeline instead of resetting.
+      setPipelineError(
+        describePipelineFailure(error?.message ?? "", AGENT_LABELS[activeStep] ?? `Agent ${activeStep}`, activeStep)
+      );
     }
   };
 
@@ -648,6 +672,7 @@ export default function App() {
    */
   const handleRetryAgent = async (stepNum: number) => {
     setIsPipelineRunning(true);
+    setPipelineError(null);
     setAgentStates((prev) => {
       const updated = { ...prev };
       updated[stepNum as 1 | 2 | 3 | 4 | 5] = { status: "running", output: "" };
@@ -676,7 +701,10 @@ export default function App() {
       step5: agentStates[5].status === "done" ? agentStates[5].output : "",
     };
 
+    let activeStep = stepNum;
+
     const executeStep = async (sNum: number, currentOutputs: typeof runOutputs): Promise<string> => {
+      activeStep = sNum;
       setAgentStates((prev) => ({
         ...prev,
         [sNum]: { status: "running", output: "" },
@@ -774,6 +802,9 @@ export default function App() {
         }
         return updated;
       });
+      setPipelineError(
+        describePipelineFailure(e?.message ?? "", AGENT_LABELS[activeStep] ?? `Agent ${activeStep}`, activeStep)
+      );
     }
   };
 
@@ -832,6 +863,7 @@ export default function App() {
     setIsPipelineRunning(false);
     setIsPipelineDone(false);
     setIsFinalized(false);
+    setPipelineError(null);
     setGroundingSources([]);
     setHumanDecisionType("");
     setChosenOption("");
@@ -862,6 +894,7 @@ export default function App() {
    */
   const handleSelectItem = (id: string) => {
     setSelectedItemId(id);
+    setPipelineError(null);
     const item = memoryItems.find((p) => p.id === id);
     if (!item) return;
 
@@ -915,6 +948,7 @@ export default function App() {
     // Clear pipeline states to allow re-running with this configuration
     setIsPipelineDone(false);
     setIsFinalized(false);
+    setPipelineError(null);
     setSelectedItemId(null);
     setHumanDecisionType("");
     setChosenOption("");
@@ -1037,24 +1071,44 @@ export default function App() {
           >
             <PanelLeft className="w-4 h-4" aria-hidden="true" />
           </button>
-          {/* Brand mark — community ring + compass */}
-          <BrandMark className="w-9 h-9 shrink-0 text-ink" />
-          <div className="min-w-0">
-            <h1 className="text-[17px] leading-none font-display font-semibold tracking-tight text-ink" id="civitas-brand">
-              CIVICTAS
-            </h1>
-            <p className="text-[10px] text-muted font-medium mt-1 tracking-wide truncate">Community Decision Copilot</p>
-          </div>
+          {/* Brand mark doubles as "home" — returns to the landing page so the
+              flow loops (home → onboarding → studio → home). */}
+          <button
+            type="button"
+            onClick={() => setView("landing")}
+            aria-label="CIVICTAS — back to home"
+            title="Back to home"
+            className="flex items-center gap-3 min-w-0 text-left -m-1 p-1 rounded-lg hover:opacity-80 transition-opacity cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          >
+            <BrandMark className="w-9 h-9 shrink-0 text-ink" />
+            <span className="min-w-0">
+              <span className="block text-[17px] leading-none font-display font-semibold tracking-tight text-ink" id="civitas-brand">
+                CIVICTAS
+              </span>
+              <span className="block text-[10px] text-muted font-medium mt-1 tracking-wide truncate">Community Decision Copilot</span>
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
           {engine && (
-            <span
-              className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-accent-soft text-accent font-semibold px-2.5 py-1 rounded-full border border-accent/20"
-              aria-label={`AI engine: ${engine.provider} ${engine.model}${engine.search ? ", web search enabled" : ""}`}
-            >
-              <Cpu className="w-3 h-3 shrink-0" aria-hidden="true" />
-              {engine.provider} · {engine.model}
+            <span className="hidden sm:inline-flex items-center gap-1.5">
+              <span
+                className="inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-accent-soft text-accent font-semibold px-2.5 py-1 rounded-full border border-accent/20"
+                aria-label={`AI engine: ${engine.provider} ${engine.model}${engine.search ? ", web search enabled" : ""}`}
+              >
+                <Cpu className="w-3 h-3 shrink-0" aria-hidden="true" />
+                {engine.provider} · {engine.model}
+              </span>
+              <RealityPill
+                kind={engine.search ? "live" : "mock"}
+                pulse={engine.search}
+                title={
+                  engine.search
+                    ? "Connected to a live model with web grounding"
+                    : "Offline demo mock — no API key configured"
+                }
+              />
             </span>
           )}
 
@@ -1117,7 +1171,7 @@ export default function App() {
             <ol className="flex items-center gap-0.5 text-xs font-semibold overflow-x-auto">
               {[
                 { label: "Inputs", anchor: "zone-inputs", exists: true },
-                { label: "AI advisory", anchor: "zone-advisory", exists: isPipelineRunning || isPipelineDone },
+                { label: "AI advisory", anchor: "zone-advisory", exists: isPipelineRunning || isPipelineDone || !!pipelineError },
                 { label: "Decision", anchor: "zone-decide", exists: isPipelineDone },
                 { label: "Record", anchor: "zone-record", exists: true },
               ].map((s, i) => {
@@ -1203,19 +1257,27 @@ export default function App() {
                 onReset={handleResetWorkflow}
                 loadedTemplate={loadedTemplate}
               />
-              {!isPipelineRunning && !isPipelineDone && !selectedItemId && (
+              {!isPipelineRunning && !isPipelineDone && !selectedItemId && !pipelineError && (
                 <EmptyState onRunSample={handleRunSample} />
               )}
             </section>
 
             {/* Zone 2 — AI advisory */}
-            {(isPipelineRunning || isPipelineDone) && (
+            {(isPipelineRunning || isPipelineDone || pipelineError) && (
               <section id="zone-advisory" aria-labelledby="zone-advisory-h" className="scroll-mt-16 space-y-4">
                 <div className="flex items-baseline gap-3">
                   <span className="font-mono text-xs text-faint">02</span>
                   <h2 id="zone-advisory-h" className="font-display text-xl font-semibold tracking-tight text-ink">AI advisory</h2>
                   <span className="text-xs text-muted hidden sm:block">Five agents advise; a 108-persona council stress-tests</span>
                 </div>
+                {pipelineError && (
+                  <PipelineErrorAlert
+                    failure={pipelineError}
+                    onRetry={handleRetryAgent}
+                    onDismiss={() => setPipelineError(null)}
+                    isPipelineRunning={isPipelineRunning}
+                  />
+                )}
                 <PipelinePanel
                   outputs={{
                     step1: agentStates[1].output,
@@ -1286,6 +1348,80 @@ export default function App() {
                   </button>
                   {showAdvanced && (
                     <div id="advanced-tools" className="px-5 pb-5 pt-1 space-y-6 border-t border-border-line">
+                      {/* Harness trace — real run state from agentStates + engine + grounding.
+                          No synthetic latency/token numbers: unknown fields show "—". */}
+                      <div className="bg-surface-solid border border-border-line rounded-2xl p-5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <h3 className="text-xs font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+                            <Activity className="w-3.5 h-3.5" aria-hidden="true" />
+                            Harness trace
+                          </h3>
+                          {engine ? (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted">
+                              {engine.provider} · {engine.model}
+                              <RealityPill
+                                kind={engine.search ? "live" : "mock"}
+                                pulse={engine.search}
+                                title={engine.search ? "Live model" : "Offline demo mock"}
+                              />
+                            </span>
+                          ) : (
+                            <RealityPill kind="unavailable" title="Engine status unknown" />
+                          )}
+                        </div>
+
+                        <div className="mt-3 overflow-hidden rounded-xl border border-border-line">
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-2 text-[9px] font-mono font-bold uppercase tracking-wider text-faint">
+                            <span className="w-4 shrink-0">#</span>
+                            <span className="flex-1 min-w-0">Agent</span>
+                            <span className="hidden sm:block w-[96px] shrink-0">Model</span>
+                            <span className="w-12 shrink-0 text-center">Valid.</span>
+                            <span className="w-10 shrink-0 text-center">Src</span>
+                            <span className="w-16 shrink-0 text-right">Status</span>
+                          </div>
+                          {([1, 2, 3, 4, 5] as const).map((n) => {
+                            const stt = agentStates[n].status;
+                            const out = agentStates[n].output.trim();
+                            const val = stt === "done" && out ? "pass" : stt === "error" ? "fail" : "—";
+                            const valCls =
+                              val === "pass" ? "text-positive" : val === "fail" ? "text-danger" : "text-faint";
+                            const statusCls =
+                              stt === "done"
+                                ? "text-positive"
+                                : stt === "running"
+                                ? "text-accent"
+                                : stt === "error"
+                                ? "text-danger"
+                                : "text-faint";
+                            const src = n === 2 ? String(groundingSources.length) : "—";
+                            return (
+                              <div
+                                key={n}
+                                className="flex items-center gap-2 px-3 py-2 border-t border-border-line bg-surface text-[11px]"
+                              >
+                                <span className="w-4 shrink-0 font-mono text-faint">{n}</span>
+                                <span className="flex-1 min-w-0 truncate font-medium text-ink">
+                                  {["Framing", "Evidence", "Simulation", "Equity & risk", "Brief"][n - 1]}
+                                </span>
+                                <span className="hidden sm:block w-[96px] shrink-0 font-mono text-muted truncate">
+                                  {engine?.model ?? "—"}
+                                </span>
+                                <span className={`w-12 shrink-0 text-center font-mono ${valCls}`}>{val}</span>
+                                <span className="w-10 shrink-0 text-center font-mono text-muted">{src}</span>
+                                <span className={`w-16 shrink-0 text-right font-mono font-semibold ${statusCls}`}>
+                                  {stt}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <p className="text-[10px] text-faint mt-2.5 leading-relaxed">
+                          Real run state — validation means the agent returned structured output; sources come
+                          from the Evidence step's grounding. No synthetic latency or token counts.
+                        </p>
+                      </div>
+
                       <VoiceAgent proposal={extractRecommendationValue()} />
                       <WorkspacePanel
                         category={category}

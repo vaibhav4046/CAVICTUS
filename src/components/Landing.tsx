@@ -1,28 +1,12 @@
-import { ArrowRight, Users, Workflow, UserCheck, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import BrandMark from "./BrandMark";
+import PipelineDiagram from "./PipelineDiagram";
+import RealityPill from "./RealityPill";
 
 interface LandingProps {
   onEnter: () => void;
   engine: { provider: string; model: string; search: boolean } | null;
 }
-
-const FEATURES = [
-  {
-    icon: Workflow,
-    title: "Five specialized agents",
-    body: "Framing, grounded evidence, simulation, equity audit, and a plain-language brief — each visible as it thinks.",
-  },
-  {
-    icon: Users,
-    title: "108-persona council",
-    body: "A community panel of 108 archetypes stress-tests every recommendation and surfaces the dissenting voices.",
-  },
-  {
-    icon: UserCheck,
-    title: "A human always decides",
-    body: "Nothing finalizes without a person choosing, writing a rationale, and clearing three accountability checks.",
-  },
-];
 
 export default function Landing({ onEnter, engine }: LandingProps) {
   return (
@@ -42,54 +26,54 @@ export default function Landing({ onEnter, engine }: LandingProps) {
       </header>
 
       {/* hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-3xl mx-auto w-full py-16">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold text-muted bg-surface border border-border-line rounded-full px-3 py-1 mb-8">
-          <Search className="w-3 h-3" aria-hidden="true" />
-          Community Decision Copilot
-        </span>
+      <main className="flex-1 flex flex-col items-center px-6 max-w-5xl mx-auto w-full py-16">
+        <div className="flex flex-col items-center text-center max-w-3xl">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold text-muted bg-surface border border-border-line rounded-full px-3 py-1 mb-8">
+            <Search className="w-3 h-3" aria-hidden="true" />
+            Community Decision Copilot
+          </span>
 
-        <h1 className="font-display font-semibold tracking-tight text-ink leading-[1.05] text-5xl md:text-6xl">
-          AI advises.
-          <br />
-          <span className="text-accent">You decide.</span>
-        </h1>
+          <h1 className="font-display font-semibold tracking-tight text-ink leading-[1.05] text-5xl md:text-6xl">
+            AI advises.
+            <br />
+            <span className="text-accent">You decide.</span>
+          </h1>
 
-        <p className="mt-6 text-base md:text-lg text-muted leading-relaxed max-w-xl">
-          CIVICTAS turns a hard community resource decision — where to place cooling centers,
-          shelters, clinics — into a transparent, equity-first recommendation. The AI does the
-          homework. A human makes the call.
-        </p>
+          <p className="mt-6 text-base md:text-lg text-muted leading-relaxed max-w-xl">
+            CIVICTAS turns a hard community resource decision — where to place cooling centers,
+            shelters, clinics — into a transparent, equity-first recommendation. The AI does the
+            homework. A human makes the call.
+          </p>
 
-        <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
-          <button
-            onClick={onEnter}
-            className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 font-semibold text-sm px-6 py-3 rounded-full transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          >
-            Open the studio
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </button>
-          {engine && (
-            <span className="text-[11px] font-mono text-muted">
-              running on {engine.provider} · {engine.model}
-            </span>
-          )}
-        </div>
-
-        {/* feature trio */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-left">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="bg-surface border border-border-line rounded-2xl p-5 shadow-sm hover:border-accent/40 transition-colors"
+          <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
+            <button
+              onClick={onEnter}
+              className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 font-semibold text-sm px-6 py-3 rounded-full transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
-              <div className="w-9 h-9 rounded-xl bg-accent-soft text-accent flex items-center justify-center mb-3">
-                <f.icon className="w-4 h-4" aria-hidden="true" />
-              </div>
-              <h3 className="font-display font-semibold text-sm text-ink">{f.title}</h3>
-              <p className="text-xs text-muted leading-relaxed mt-1.5">{f.body}</p>
-            </div>
-          ))}
+              Open the studio
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </button>
+            {engine && (
+              <span className="inline-flex items-center gap-2 text-[11px] font-mono text-muted">
+                <span>
+                  {engine.provider} · {engine.model}
+                </span>
+                <RealityPill
+                  kind={engine.search ? "live" : "mock"}
+                  pulse={engine.search}
+                  title={
+                    engine.search
+                      ? "Connected to a live model with web grounding"
+                      : "Offline demo mock — no API key configured"
+                  }
+                />
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* The real pipeline — inputs → agents → council → human gate → outputs */}
+        <PipelineDiagram className="mt-16" />
 
         {/* Positioning + scope (problem-understanding signal) */}
         <div className="mt-12 w-full max-w-2xl text-left bg-surface border border-border-line rounded-2xl p-5 shadow-sm">
