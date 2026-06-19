@@ -288,7 +288,7 @@ async function runMock(step: string, body: AgentBody, cb: StreamCallbacks): Prom
 }
 
 async function runGemini(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = cleanKey(process.env.GEMINI_API_KEY);
   if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
 
   const ai = new GoogleGenAI({
@@ -328,7 +328,7 @@ async function runGemini(step: string, body: AgentBody, cb: StreamCallbacks): Pr
 }
 
 async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = cleanKey(process.env.GROQ_API_KEY);
   if (!apiKey) throw new Error("GROQ_API_KEY is missing.");
 
   const { systemInstruction, userPrompt } = buildAgentMessages(step, body);
@@ -397,6 +397,14 @@ function dedupeSources(sources: Source[]): Source[] {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Strip a leading BOM (U+FEFF) and surrounding whitespace. Env vars set via
+// some shells/dashboards can carry a BOM that breaks the Authorization header.
+function cleanKey(v?: string): string {
+  // trim() strips a leading/trailing BOM (U+FEFF is in the WhiteSpace set),
+  // which some shells/dashboards prepend when setting an env var.
+  return (v || "").replace(new RegExp(String.fromCharCode(0xfeff), "g"), "").trim();
 }
 
 async function safeText(resp: Response): Promise<string> {

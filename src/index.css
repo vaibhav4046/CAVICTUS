@@ -2,12 +2,12 @@
 @import "tailwindcss";
 
 :root {
-  --color-raw-bg: #FBFBFD;
-  --color-raw-surface: rgba(255, 255, 255, 0.72);
+  --color-raw-bg: #F6F8FA;
+  --color-raw-surface: #FFFFFF;
   --color-raw-surface-solid: #FFFFFF;
-  --color-raw-ink: #14171F;
-  --color-raw-muted: #6B7280;
-  --color-raw-border-line: rgba(17, 17, 26, 0.08);
+  --color-raw-ink: #1F2024;
+  --color-raw-muted: #5F6571;
+  --color-raw-border-line: #E4E7EC;
   --color-raw-accent: #5B68F5;
   --color-raw-accent-2: #7C5CF0;
   
