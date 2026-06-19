@@ -15,6 +15,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { getMockOutput } from "./mock.js";
+import { webSearch, formatSearchResults } from "./search.js";
 
 export interface AgentBody {
   category?: string;
@@ -52,9 +53,17 @@ export function resolveProvider(): Provider {
   if (forced === "gemini" || forced === "groq" || forced === "mock") {
     return forced;
   }
-  if (process.env.GEMINI_API_KEY) return "gemini";
-  if (process.env.GROQ_API_KEY) return "groq";
+  if (cleanKey(process.env.GEMINI_API_KEY)) return "gemini";
+  if (cleanKey(process.env.GROQ_API_KEY)) return "groq";
   return "mock";
+}
+
+/** Public, secret-free description of the active engine — for the UI badge. */
+export function providerInfo(): { provider: Provider; model: string; search: boolean } {
+  const provider = resolveProvider();
+  const model =
+    provider === "gemini" ? GEMINI_MODEL : provider === "groq" ? GROQ_MODEL : "demo-mock";
+  return { provider, model, search: provider !== "mock" };
 }
 
 /**
@@ -333,6 +342,19 @@ async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Prom
 
   const { systemInstruction, userPrompt } = buildAgentMessages(step, body);
 
+  // Groq has no native web grounding, so the Evidence step gets a real web
+  // search (DuckDuckGo) injected into its prompt, and those URLs become the
+  // cited sources — making "deep search" genuinely real on Groq too.
+  let finalUser = userPrompt;
+  if (step === "2") {
+    const query = `${body.category || ""} ${body.situation || ""}`.trim().slice(0, 300);
+    const results = await webSearch(query, 5);
+    if (results.length) {
+      finalUser = `${userPrompt}\n\n# Live web search results (ground your findings in these and cite them):\n${formatSearchResults(results)}`;
+      if (cb.onSources) cb.onSources(results.map((r) => ({ title: r.title, url: r.url })));
+    }
+  }
+
   const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -345,7 +367,7 @@ async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Prom
       stream: true,
       messages: [
         { role: "system", content: systemInstruction },
-        { role: "user", content: userPrompt },
+        { role: "user", content: finalUser },
       ],
     }),
   });
@@ -376,6 +398,47 @@ async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Prom
       }
     }
   }
+}
+
+/**
+ * Non-streaming single completion for structured tasks (e.g. the persona
+ * council). Returns the full text. Mock provider returns "" so callers supply
+ * their own deterministic fallback.
+ */
+export async function complete(system: string, user: string, temperature = 0.3): Promise<string> {
+  const provider = resolveProvider();
+  if (provider === "mock") return "";
+
+  if (provider === "groq") {
+    const apiKey = cleanKey(process.env.GROQ_API_KEY);
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        temperature,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
+    });
+    if (!resp.ok) throw new Error(`Groq API error (${resp.status}): ${(await safeText(resp)).slice(0, 200)}`);
+    const json: any = await resp.json();
+    return json.choices?.[0]?.message?.content || "";
+  }
+
+  // gemini
+  const ai = new GoogleGenAI({
+    apiKey: cleanKey(process.env.GEMINI_API_KEY),
+    httpOptions: { headers: { "User-Agent": "civictas-app" } },
+  });
+  const r = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: user,
+    config: { systemInstruction: system, temperature },
+  });
+  return r.text || "";
 }
 
 function chunkText(text: string, size: number): string[] {
