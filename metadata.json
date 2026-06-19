@@ -1,0 +1,6 @@
+{
+  "name": "Civictas",
+  "description": "Community Decision Copilot — Helping communities decide better with AI that advises and humans who decide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
