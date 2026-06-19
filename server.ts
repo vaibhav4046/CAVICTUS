@@ -43,6 +43,7 @@ async function startServer() {
       sites: req.body.sites,
       equityGoal: req.body.equityGoal,
       memoryContext: req.body.memoryContext,
+      dataset: req.body.dataset,
       previousOutputs: req.body.previousOutputs,
     };
 

@@ -148,6 +148,7 @@ export default function App() {
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
   const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
+  const [dataset, setDataset] = useState("");
   const [view, setView] = useState<"landing" | "onboarding" | "studio">(() =>
     typeof window !== "undefined" && localStorage.getItem("civictas_seen") ? "studio" : "landing"
   );
@@ -436,7 +437,7 @@ export default function App() {
   /**
    * Run the Agent Sequential Pipeline (Steps 1 through 5)
    */
-  const handleRunPipeline = async (cat: string, sit: string, constr: DecisionConstraints) => {
+  const handleRunPipeline = async (cat: string, sit: string, constr: DecisionConstraints, ds?: string) => {
     if (isPipelineRunning) return;
 
     // Reset workflow statuses
@@ -452,6 +453,7 @@ export default function App() {
     setIsFinalized(false);
     setGroundingSources([]);
     setChannels([]);
+    setDataset(ds || "");
     setHumanDecisionType("");
     setChosenOption("");
     setHumanRationale("");
@@ -498,6 +500,7 @@ export default function App() {
           sites: constr.sites,
           equityGoal: constr.equityGoal,
           memoryContext: memoryPromptContext,
+          dataset: ds || "",
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,
@@ -675,6 +678,7 @@ export default function App() {
           sites,
           equityGoal,
           memoryContext: memoryPromptContext,
+          dataset,
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,

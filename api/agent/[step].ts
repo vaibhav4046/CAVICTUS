@@ -50,6 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sites: b.sites as string,
     equityGoal: b.equityGoal as string,
     memoryContext: b.memoryContext as string,
+    dataset: b.dataset as string,
     previousOutputs: b.previousOutputs as AgentBody["previousOutputs"],
   };
 
