@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Sparkles, HelpCircle, FileText, ChevronRight, CheckCircle, Flame, GraduationCap, ArrowUpRight, Scale, Cpu } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { HelpCircle, FileText, Cpu, Sun, Moon, Check, ChevronDown, ChevronRight } from "lucide-react";
 
 import Sidebar from "./components/Sidebar";
+import BrandMark from "./components/BrandMark";
 import HowItWorksModal from "./components/HowItWorksModal";
 import SetupPanel from "./components/SetupPanel";
 import PipelinePanel from "./components/PipelinePanel";
@@ -153,6 +154,17 @@ export default function App() {
   const [view, setView] = useState<"landing" | "onboarding" | "studio">(() =>
     typeof window !== "undefined" && localStorage.getItem("civictas_seen") ? "studio" : "landing"
   );
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const prevRunningRef = useRef(false);
+
+  // After a fresh pipeline run finishes, spotlight the human decision gate.
+  useEffect(() => {
+    if (prevRunningRef.current && !isPipelineRunning && isPipelineDone) {
+      document.getElementById("zone-decide")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    prevRunningRef.current = isPipelineRunning;
+  }, [isPipelineRunning, isPipelineDone]);
 
   // States of individual agents (Steps 1 to 5)
   const [agentStates, setAgentStates] = useState<{
@@ -990,94 +1002,71 @@ export default function App() {
     );
   }
 
+  const workflowStage = isFinalized ? 3 : isPipelineDone && !isPipelineRunning ? 2 : isPipelineRunning ? 1 : 0;
+
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col font-sans transition-colors duration-300 relative overflow-hidden" id="civitas-root">
-      
+
+      {/* Skip to main content (WCAG 2.4.1) */}
+      <a
+        href="#decision-workspace"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-on-accent focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Calm, flat background. In dark mode only, one barely-there static glow. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 hidden dark:block" aria-hidden="true">
-        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-teal-500/5 blur-[140px]" />
+        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-accent/10 blur-[140px]" />
       </div>
 
-      {/* Premium Top Navigation bar */}
+      {/* Top navigation */}
       <header
         id="top-navigation"
-        className="h-16 border-b border-border-line bg-surface-solid sticky top-0 z-40 flex items-center justify-between px-6 select-none transition-colors duration-300 relative"
+        className="h-16 border-b border-border-line bg-surface-solid sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 select-none transition-colors duration-300"
       >
-        <div className="flex items-center gap-3">
-          {/* Glassmorphic Transparent Civic Shield Logo */}
-          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500/10 to-blue-600/10 dark:from-sky-400/15 dark:to-blue-500/15 border border-blue-500/25 dark:border-blue-400/30 backdrop-blur-sm text-blue-600 dark:text-blue-400 shadow-inner cursor-pointer" aria-hidden="true">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-current" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              <path d="M12 8v8" />
-              <path d="M9 11h6" />
-            </svg>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-display font-extrabold tracking-tight text-ink" id="civitas-brand">
-                CIVICTAS
-              </h1>
-            </div>
-            <p className="text-[10px] text-muted font-bold -mt-1 tracking-wide">Community Decision Copilot</p>
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Brand mark — community ring + compass */}
+          <BrandMark className="w-9 h-9 shrink-0 text-ink" />
+          <div className="min-w-0">
+            <h1 className="text-[17px] leading-none font-display font-semibold tracking-tight text-ink" id="civitas-brand">
+              CIVICTAS
+            </h1>
+            <p className="text-[10px] text-muted font-medium mt-1 tracking-wide truncate">Community Decision Copilot</p>
           </div>
         </div>
 
-        {/* Subtitle taglines info */}
-        <div className="hidden lg:flex items-center gap-2">
-          <span className="text-xs font-semibold text-muted leading-relaxed">
-            Helping communities decide better — with AI that advises and humans who decide.
-          </span>
-        </div>
-
-        {/* Informative actions */}
-        <div className="flex items-center gap-3">
-          <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-slate-100/60 dark:bg-slate-800/60 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded-full border border-border-line">
-            AI-assisted · Human-decided
-          </span>
-
+        <div className="flex items-center gap-2">
           {engine && (
             <span
-              className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2.5 py-1 rounded-full border border-emerald-500/20"
-              title={`Engine: ${engine.provider} · ${engine.model}${engine.search ? " · web search on" : ""}`}
+              className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-accent-soft text-accent font-semibold px-2.5 py-1 rounded-full border border-accent/20"
+              aria-label={`AI engine: ${engine.provider} ${engine.model}${engine.search ? ", web search enabled" : ""}`}
             >
-              <Cpu className="w-3 h-3 shrink-0" />
+              <Cpu className="w-3 h-3 shrink-0" aria-hidden="true" />
               {engine.provider} · {engine.model}
             </span>
           )}
 
-          {/* Minimal Elegant Theme Toggle Button */}
+          <span className="hidden lg:inline-flex items-center text-[10px] font-mono whitespace-nowrap bg-surface-2 text-muted font-semibold px-2.5 py-1 rounded-full border border-border-line">
+            AI-assisted · Human-decided
+          </span>
+
+          {/* Theme toggle */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-1 px-2.5 h-8 border border-border-line hover:bg-slate-100 dark:hover:bg-slate-800 text-muted rounded-lg flex items-center justify-center gap-1.5 transition-all text-xs font-semibold cursor-pointer select-none"
-            aria-label="Toggle visual theme mode"
-            title={isDarkMode ? "Toggle Light Theme" : "Toggle Dark Theme"}
+            className="h-8 w-8 grid place-items-center border border-border-line hover:bg-surface-2 text-muted hover:text-ink rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            aria-label={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
           >
-            {isDarkMode ? (
-              <>
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-amber-400 stroke-current" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                </svg>
-                <span className="text-[10px] text-muted hidden md:inline">Light</span>
-              </>
-            ) : (
-              <>
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-sky-600 stroke-current" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-                <span className="text-[10px] text-muted hidden md:inline">Dark</span>
-              </>
-            )}
+            {isDarkMode ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
           </button>
 
           <button
             id="how-it-works-trigger"
             onClick={() => setIsHowItWorksOpen(true)}
-            className="flex items-center gap-1 h-8 px-3 border border-border-line bg-surface hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold rounded-lg text-ink cursor-pointer transition-all"
-            aria-label="Open how it works documentation modal"
+            className="inline-flex items-center gap-1.5 h-8 px-3 border border-border-line bg-surface hover:bg-surface-2 text-xs font-semibold rounded-lg text-ink cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-muted" />
-            How it works
+            <HelpCircle className="w-3.5 h-3.5 text-muted" aria-hidden="true" />
+            <span className="hidden sm:inline">How it works</span>
           </button>
         </div>
       </header>
@@ -1097,128 +1086,224 @@ export default function App() {
         {/* Right scrolling workspace container */}
         <main
           id="decision-workspace"
-          className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full relative z-10"
+          className="flex-1 overflow-y-auto max-w-5xl mx-auto w-full relative z-10"
         >
-          {/* Header banner context when selective archives are viewed */}
-          {selectedItemId && (
-            <div className="p-4 bg-surface-solid border border-border-line rounded-2xl flex items-center justify-between shadow-md" id="history-details-banner">
-              <div className="flex items-center gap-2.5">
-                <FileText className="w-5 h-5 text-accent shrink-0" />
-                <div>
-                  <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-display">
-                    Viewing Historical Decision Archive
-                  </h3>
-                  <p className="text-xs text-muted mt-0.5 font-medium">
-                    This run is locked to read-only memory parameters. Click 'Use template' in the sidebar or Reset below to run a new simulation.
-                  </p>
+          {/* Sticky progress rail */}
+          <nav
+            aria-label="Decision progress"
+            className="sticky top-0 z-20 bg-surface-solid border-b border-border-line px-4 md:px-8 py-2.5"
+          >
+            <ol className="flex items-center gap-0.5 text-xs font-semibold overflow-x-auto">
+              {[
+                { label: "Inputs", anchor: "zone-inputs", exists: true },
+                { label: "AI advisory", anchor: "zone-advisory", exists: isPipelineRunning || isPipelineDone },
+                { label: "Decision", anchor: "zone-decide", exists: isPipelineDone },
+                { label: "Record", anchor: "zone-record", exists: true },
+              ].map((s, i) => {
+                const state = i < workflowStage ? "done" : i === workflowStage ? "current" : "todo";
+                const dot = (
+                  <span
+                    className={`grid place-items-center w-4 h-4 rounded-full text-[9px] font-mono shrink-0 ${
+                      state === "current"
+                        ? "bg-on-accent/25"
+                        : state === "done"
+                        ? "bg-accent/15 text-accent"
+                        : "bg-surface-2 text-faint"
+                    }`}
+                  >
+                    {state === "done" ? <Check className="w-2.5 h-2.5" aria-hidden="true" /> : i + 1}
+                  </span>
+                );
+                return (
+                  <li key={s.anchor} className="flex items-center shrink-0">
+                    {s.exists ? (
+                      <a
+                        href={`#${s.anchor}`}
+                        aria-current={state === "current" ? "step" : undefined}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
+                          state === "current"
+                            ? "bg-accent text-on-accent"
+                            : state === "done"
+                            ? "text-accent hover:bg-accent-soft"
+                            : "text-muted hover:bg-surface-2"
+                        }`}
+                      >
+                        {dot}
+                        {s.label}
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-faint">
+                        {dot}
+                        {s.label}
+                      </span>
+                    )}
+                    {i < 3 && <ChevronRight className="w-3 h-3 text-faint shrink-0" aria-hidden="true" />}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          <div className="p-4 md:p-8 space-y-10">
+            {/* Read-only history banner */}
+            {selectedItemId && (
+              <div className="p-4 bg-surface border border-border-line rounded-2xl flex items-center justify-between gap-3 shadow-sm" id="history-details-banner">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <FileText className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-display">
+                      Viewing historical decision archive
+                    </h3>
+                    <p className="text-xs text-muted mt-0.5 font-medium">
+                      Read-only memory parameters. Use 'Use template' in the sidebar, or reset to run a new simulation.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleResetWorkflow}
+                  className="shrink-0 text-xs py-1.5 px-3.5 bg-surface hover:bg-surface-2 text-ink font-semibold rounded-lg border border-border-line transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  Start new
+                </button>
               </div>
-              <button
-                onClick={handleResetWorkflow}
-                className="text-xs py-1.5 px-3.5 bg-surface hover:bg-surface/50 text-ink font-semibold rounded-xl border border-border-line transition-all cursor-pointer shadow-sm"
-              >
-                Clear view and Start New
-              </button>
-            </div>
-          )}
+            )}
 
-          {/* Setup section */}
-          <SetupPanel
-            isPipelineRunning={isPipelineRunning}
-            isPipelineDone={isPipelineDone}
-            onRunPipeline={handleRunPipeline}
-            onReset={handleResetWorkflow}
-            loadedTemplate={loadedTemplate}
-          />
+            {/* Zone 1 — Inputs */}
+            <section id="zone-inputs" aria-labelledby="zone-inputs-h" className="scroll-mt-16 space-y-4">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-xs text-faint">01</span>
+                <h2 id="zone-inputs-h" className="font-display text-xl font-semibold tracking-tight text-ink">Inputs</h2>
+                <span className="text-xs text-muted hidden sm:block">Frame the decision and its constraints</span>
+              </div>
+              <SetupPanel
+                isPipelineRunning={isPipelineRunning}
+                isPipelineDone={isPipelineDone}
+                onRunPipeline={handleRunPipeline}
+                onReset={handleResetWorkflow}
+                loadedTemplate={loadedTemplate}
+              />
+              {!isPipelineRunning && !isPipelineDone && !selectedItemId && (
+                <EmptyState onRunSample={handleRunSample} />
+              )}
+            </section>
 
-          {!isPipelineRunning && !isPipelineDone && !selectedItemId && (
-            <EmptyState onRunSample={handleRunSample} />
-          )}
+            {/* Zone 2 — AI advisory */}
+            {(isPipelineRunning || isPipelineDone) && (
+              <section id="zone-advisory" aria-labelledby="zone-advisory-h" className="scroll-mt-16 space-y-4">
+                <div className="flex items-baseline gap-3">
+                  <span className="font-mono text-xs text-faint">02</span>
+                  <h2 id="zone-advisory-h" className="font-display text-xl font-semibold tracking-tight text-ink">AI advisory</h2>
+                  <span className="text-xs text-muted hidden sm:block">Five agents advise; a 108-persona council stress-tests</span>
+                </div>
+                <PipelinePanel
+                  outputs={{
+                    step1: agentStates[1].output,
+                    step2: agentStates[2].output,
+                    step3: agentStates[3].output,
+                    step4: agentStates[4].output,
+                    step5: agentStates[5].output,
+                  }}
+                  agentStates={agentStates}
+                  onRetryAgent={handleRetryAgent}
+                  groundingSources={groundingSources}
+                />
+                <CouncilPanel
+                  active={isPipelineDone && !isPipelineRunning}
+                  category={category}
+                  situation={situation}
+                  equityGoal={equityGoal}
+                  recommendation={extractRecommendationValue()}
+                  channels={channels}
+                />
+              </section>
+            )}
 
-          {/* Active sequence advisors pipeline cards */}
-          {(isPipelineRunning || isPipelineDone) && (
-            <PipelinePanel
-              outputs={{
-                step1: agentStates[1].output,
-                step2: agentStates[2].output,
-                step3: agentStates[3].output,
-                step4: agentStates[4].output,
-                step5: agentStates[5].output,
-              }}
-              agentStates={agentStates}
-              onRetryAgent={handleRetryAgent}
-              groundingSources={groundingSources}
-            />
-          )}
+            {/* Zone 3 — Decision */}
+            {(isPipelineDone || isFinalized) && (
+              <section id="zone-decide" aria-labelledby="zone-decide-h" className="scroll-mt-16 space-y-4">
+                <div className="flex items-baseline gap-3">
+                  <span className="font-mono text-xs text-faint">03</span>
+                  <h2 id="zone-decide-h" className="font-display text-xl font-semibold tracking-tight text-ink">Decision</h2>
+                  <span className="text-xs text-muted hidden sm:block">A human reviews, reasons, and signs off</span>
+                </div>
+                <HumanReviewPanel
+                  isPipelineDone={isPipelineDone && !isPipelineRunning}
+                  recommendedOption={extractRecommendationValue()}
+                  isFinalized={isFinalized}
+                  onFinalize={handleFinalizeDecision}
+                  onStartNew={handleResetWorkflow}
+                  onDownloadBrief={triggerDownloadBrief}
+                  reviewers={reviewers}
+                  selectedReviewerIndex={selectedReviewerIndex}
+                  onSelectReviewer={handleSelectReviewer}
+                  onAddReviewer={handleAddReviewer}
+                  onDeleteReviewer={handleDeleteReviewer}
+                  notificationStatus={notificationStatus}
+                />
+              </section>
+            )}
 
-          {/* Oversight Human Verification Section */}
-          <HumanReviewPanel
-            isPipelineDone={isPipelineDone && !isPipelineRunning}
-            recommendedOption={extractRecommendationValue()}
-            isFinalized={isFinalized}
-            onFinalize={handleFinalizeDecision}
-            onStartNew={handleResetWorkflow}
-            onDownloadBrief={triggerDownloadBrief}
-            reviewers={reviewers}
-            selectedReviewerIndex={selectedReviewerIndex}
-            onSelectReviewer={handleSelectReviewer}
-            onAddReviewer={handleAddReviewer}
-            onDeleteReviewer={handleDeleteReviewer}
-            notificationStatus={notificationStatus}
-          />
+            {/* Zone 4 — Record */}
+            <section id="zone-record" aria-labelledby="zone-record-h" className="scroll-mt-16 space-y-4">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-xs text-faint">04</span>
+                <h2 id="zone-record-h" className="font-display text-xl font-semibold tracking-tight text-ink">Record</h2>
+                <span className="text-xs text-muted hidden sm:block">Tamper-evident ledger and decision memory</span>
+              </div>
+              <LedgerPanel items={memoryItems} />
 
-          {/* 108-persona judging council + multi-channel review dispatch status */}
-          <CouncilPanel
-            active={isPipelineDone && !isPipelineRunning}
-            category={category}
-            situation={situation}
-            equityGoal={equityGoal}
-            recommendation={extractRecommendationValue()}
-            channels={channels}
-          />
-
-          {/* Free in-browser voice agent for the human review */}
-          {isPipelineDone && !isPipelineRunning && (
-            <VoiceAgent proposal={extractRecommendationValue()} />
-          )}
-
-          {/* Tamper-evident decision ledger (real SHA-256 hash chain) */}
-          <LedgerPanel items={memoryItems} />
-
-          {/* Active Google Workspace Connect integration panel */}
-          {isPipelineDone && !isPipelineRunning && (
-            <WorkspacePanel
-              category={category}
-              situation={situation}
-              budget={budget}
-              sites={sites}
-              equityGoal={equityGoal}
-              outputs={{
-                step1: agentStates[1].output,
-                step2: agentStates[2].output,
-                step3: agentStates[3].output,
-                step4: agentStates[4].output,
-                step5: agentStates[5].output,
-              }}
-              isPipelineDone={isPipelineDone}
-              humanDecision={humanDecisionType}
-              chosenOption={chosenOption}
-              humanRationale={humanRationale}
-            />
-          )}
+              {isPipelineDone && !isPipelineRunning && (
+                <div className="border border-border-line rounded-2xl bg-surface overflow-hidden">
+                  <button
+                    onClick={() => setShowAdvanced((s) => !s)}
+                    aria-expanded={showAdvanced}
+                    aria-controls="advanced-tools"
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-ink hover:bg-surface-2 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+                  >
+                    <span>Advanced — voice review &amp; Workspace export</span>
+                    <ChevronDown className={`w-4 h-4 text-muted transition-transform ${showAdvanced ? "rotate-180" : ""}`} aria-hidden="true" />
+                  </button>
+                  {showAdvanced && (
+                    <div id="advanced-tools" className="px-5 pb-5 pt-1 space-y-6 border-t border-border-line">
+                      <VoiceAgent proposal={extractRecommendationValue()} />
+                      <WorkspacePanel
+                        category={category}
+                        situation={situation}
+                        budget={budget}
+                        sites={sites}
+                        equityGoal={equityGoal}
+                        outputs={{
+                          step1: agentStates[1].output,
+                          step2: agentStates[2].output,
+                          step3: agentStates[3].output,
+                          step4: agentStates[4].output,
+                          step5: agentStates[5].output,
+                        }}
+                        isPipelineDone={isPipelineDone}
+                        humanDecision={humanDecisionType}
+                        chosenOption={chosenOption}
+                        humanRationale={humanRationale}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          </div>
         </main>
       </div>
 
       {/* Accessible visual document modal popup */}
       <HowItWorksModal isOpen={isHowItWorksOpen} onClose={() => setIsHowItWorksOpen(false)} />
 
-      {/* Footer accessibility compliance row */}
+      {/* Footer */}
       <footer
         id="civitas-footer"
-        className="bg-surface-solid border-t border-border-line py-4.5 text-center text-[11px] text-muted transition-colors"
+        role="contentinfo"
+        className="bg-surface-solid border-t border-border-line py-4 text-center text-[11px] text-muted transition-colors"
       >
-        <span className="font-medium" id="accessibility-notice">
-          Accessibility Note: CIVICTAS meets WCAG AA guidelines with high text-contrast colors, full mechanical keyboard tab index focus, and aria-labels. Designed for desktop precision adaptively scalable.
+        <span className="font-medium">
+          CIVICTAS · AI advises, a human decides · Built for the USAII Global AI Hackathon 2026
         </span>
       </footer>
     </div>
