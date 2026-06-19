@@ -100,8 +100,16 @@ function extractJson(text: string): any | null {
   }
 }
 
-export async function runCouncil(input: CouncilInput): Promise<CouncilResult> {
+export async function runCouncil(
+  input: CouncilInput,
+  opts?: { forceProvider?: "mock" }
+): Promise<CouncilResult> {
   const info = providerInfo();
+  // Demo mode: skip the live model entirely and return the deterministic panel
+  // so a quota limit never breaks the council in front of judges.
+  if (opts?.forceProvider === "mock") {
+    return mockCouncil("mock", "demo-mock");
+  }
   const rosterSummary = `${COUNCIL_SIZE} personas = ${ROLES.length} roles x ${SEGMENTS.length} community segments. Roles: ${ROLES.join(
     ", "
   )}. Segments: ${SEGMENTS.join(", ")}.`;

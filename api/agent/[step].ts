@@ -59,12 +59,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     let sources: Source[] = [];
-    await runAgentStream(step, body, {
-      onText: (text) => res.write(text),
-      onSources: (s) => {
-        sources = s;
+    await runAgentStream(
+      step,
+      body,
+      {
+        onText: (text) => res.write(text),
+        onSources: (s) => {
+          sources = s;
+        },
       },
-    });
+      { forceProvider: b.demo ? "mock" : undefined }
+    );
     if (sources.length > 0) {
       res.write(`\n\n[METADATA_JSON: ${JSON.stringify({ sources })}]`);
     }

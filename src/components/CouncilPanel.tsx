@@ -43,6 +43,8 @@ interface CouncilPanelProps {
   equityGoal: string;
   recommendation: string;
   channels: ChannelStatus[];
+  /** When true, the council runs in deterministic demo mode (forced mock). */
+  demo?: boolean;
 }
 
 const verdictChip = (v: string): string => {
@@ -59,7 +61,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
 
   useEffect(() => {
     if (!props.active || !props.recommendation) return;
-    const key = props.recommendation;
+    const key = `${props.demo ? "demo" : "live"}|${props.recommendation}`;
     if (fetchedKey.current === key) return;
     fetchedKey.current = key;
 
@@ -73,6 +75,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
         situation: props.situation,
         equityGoal: props.equityGoal,
         recommendation: props.recommendation,
+        demo: props.demo ?? false,
       }),
     })
       .then((r) => r.json())
@@ -82,7 +85,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
       })
       .catch(() => setError("Council request failed."))
       .finally(() => setLoading(false));
-  }, [props.active, props.recommendation]);
+  }, [props.active, props.recommendation, props.demo]);
 
   if (!props.active) return null;
 
