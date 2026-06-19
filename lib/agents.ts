@@ -283,9 +283,12 @@ export interface StreamCallbacks {
 export async function runAgentStream(
   step: string,
   body: AgentBody,
-  cb: StreamCallbacks
+  cb: StreamCallbacks,
+  opts?: { forceProvider?: Provider }
 ): Promise<void> {
-  const provider = resolveProvider();
+  // forceProvider lets the client request the deterministic mock path (demo
+  // mode / failure fallback) so a live quota limit never breaks a demo.
+  const provider = opts?.forceProvider ?? resolveProvider();
   if (provider === "mock") {
     return runMock(step, body, cb);
   }

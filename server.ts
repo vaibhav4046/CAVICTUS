@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { runAgentStream, resolveProvider, providerInfo, type AgentBody, type Source } from "./lib/agents.js";
+import { runCouncil } from "./lib/council.js";
 
 dotenv.config();
 
@@ -24,6 +25,30 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     // `engine` is the secret-free description the UI badge + harness trace read.
     res.json({ ok: true, engine: providerInfo(), provider: resolveProvider() });
+  });
+
+  // 108-persona council. Mirrors api/council.ts so dev/preview matches prod and
+  // honours the demo flag (forces the deterministic mock panel).
+  app.post("/api/council", async (req, res) => {
+    if (!checkSecret(req)) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    const b = req.body || {};
+    try {
+      const result = await runCouncil(
+        {
+          category: b.category || "",
+          situation: b.situation || "",
+          equityGoal: b.equityGoal || "",
+          recommendation: b.recommendation || "",
+        },
+        { forceProvider: b.demo ? "mock" : undefined }
+      );
+      res.json(result);
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || "Council evaluation failed." });
+    }
   });
 
   // API Route for running a step of the decision pipeline
@@ -50,12 +75,18 @@ async function startServer() {
 
     try {
       let sources: Source[] = [];
-      await runAgentStream(step, body, {
-        onText: (text) => res.write(text),
-        onSources: (s) => {
-          sources = s;
+      await runAgentStream(
+        step,
+        body,
+        {
+          onText: (text) => res.write(text),
+          onSources: (s) => {
+            sources = s;
+          },
         },
-      });
+        // Demo mode / client-side failure fallback forces the deterministic mock.
+        { forceProvider: req.body.demo ? "mock" : undefined }
+      );
       if (sources.length > 0) {
         res.write(`\n\n[METADATA_JSON: ${JSON.stringify({ sources })}]`);
       }

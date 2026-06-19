@@ -1,4 +1,4 @@
-import { AlertTriangle, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, RefreshCw, X, PlayCircle } from "lucide-react";
 import RealityPill from "./RealityPill";
 import { PipelineFailure } from "../utils";
 
@@ -6,6 +6,8 @@ interface PipelineErrorAlertProps {
   failure: PipelineFailure;
   /** Retry only the step that failed (and any downstream steps). */
   onRetry: (step: number) => void;
+  /** Re-run the whole pipeline in deterministic demo mode (guaranteed to finish). */
+  onDemoFallback?: () => void;
   /** Dismiss the banner without retrying. */
   onDismiss: () => void;
   /** Disable retry while a run is in flight. */
@@ -24,6 +26,7 @@ interface PipelineErrorAlertProps {
 export default function PipelineErrorAlert({
   failure,
   onRetry,
+  onDemoFallback,
   onDismiss,
   isPipelineRunning,
 }: PipelineErrorAlertProps) {
@@ -64,7 +67,7 @@ export default function PipelineErrorAlert({
             {failure.detail}
           </p>
 
-          <div className="flex items-center gap-2 pt-0.5">
+          <div className="flex items-center gap-2 pt-0.5 flex-wrap">
             <button
               type="button"
               onClick={() => onRetry(failure.step)}
@@ -74,6 +77,18 @@ export default function PipelineErrorAlert({
               <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
               Retry {failure.agentLabel.split("—")[0].trim()}
             </button>
+            {onDemoFallback && (
+              <button
+                type="button"
+                onClick={onDemoFallback}
+                disabled={isPipelineRunning}
+                className="inline-flex items-center gap-1.5 py-1.5 px-3 text-sm font-semibold rounded-lg bg-accent text-on-accent hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
+                title="Re-run the full pipeline with canned demo outputs — always completes"
+              >
+                <PlayCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                Continue in demo mode
+              </button>
+            )}
             <button
               type="button"
               onClick={onDismiss}

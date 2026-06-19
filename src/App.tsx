@@ -161,6 +161,9 @@ export default function App() {
   // Honest failure surface: set when an agent step throws so the UI shows the
   // real reason instead of silently reverting to the setup form.
   const [pipelineError, setPipelineError] = useState<PipelineFailure | null>(null);
+  // True while a run uses the deterministic demo path (forced mock), so outputs
+  // are labelled honestly as canned examples rather than live AI.
+  const [ranInDemo, setRanInDemo] = useState(false);
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
   const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
@@ -465,7 +468,7 @@ export default function App() {
   /**
    * Run the Agent Sequential Pipeline (Steps 1 through 5)
    */
-  const handleRunPipeline = async (cat: string, sit: string, constr: DecisionConstraints, ds?: string) => {
+  const handleRunPipeline = async (cat: string, sit: string, constr: DecisionConstraints, ds?: string, demo = false) => {
     if (isPipelineRunning) return;
 
     // Reset workflow statuses
@@ -480,6 +483,7 @@ export default function App() {
     setIsPipelineDone(false);
     setIsFinalized(false);
     setPipelineError(null);
+    setRanInDemo(demo);
     setGroundingSources([]);
     setChannels([]);
     setDataset(ds || "");
@@ -534,6 +538,7 @@ export default function App() {
           equityGoal: constr.equityGoal,
           memoryContext: memoryPromptContext,
           dataset: ds || "",
+          demo,
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,
@@ -655,6 +660,14 @@ export default function App() {
    * Runs the seeded Riverside cooling-center decision so a judge sees a full
    * pipeline in one click — no setup required.
    */
+  // One-click recovery from a live failure: re-run the whole pipeline through
+  // the deterministic demo path so a judge always sees a complete result, with
+  // the output clearly labelled as canned demo (never passed off as live).
+  const handleDemoFallback = () => {
+    setPipelineError(null);
+    handleRunPipeline(category, situation, { budget, sites, equityGoal }, dataset, true);
+  };
+
   const handleRunSample = () => {
     handleRunPipeline(
       "Cooling centers (extreme heat)",
@@ -1274,9 +1287,20 @@ export default function App() {
                   <PipelineErrorAlert
                     failure={pipelineError}
                     onRetry={handleRetryAgent}
+                    onDemoFallback={handleDemoFallback}
                     onDismiss={() => setPipelineError(null)}
                     isPipelineRunning={isPipelineRunning}
                   />
+                )}
+                {ranInDemo && (isPipelineRunning || isPipelineDone) && (
+                  <div className="flex items-start gap-2.5 bg-warning/10 border border-warning/30 rounded-2xl p-3 md:p-3.5">
+                    <RealityPill kind="mock" label="Demo mode" />
+                    <p className="text-xs text-ink leading-relaxed min-w-0">
+                      Outputs below are <strong>canned demo examples</strong>, not live AI — shown
+                      because the live model was unavailable or demo mode was requested. Add a Gemini
+                      or Groq key to run the real pipeline.
+                    </p>
+                  </div>
                 )}
                 <PipelinePanel
                   outputs={{
@@ -1297,6 +1321,7 @@ export default function App() {
                   equityGoal={equityGoal}
                   recommendation={extractRecommendationValue()}
                   channels={channels}
+                  demo={ranInDemo}
                 />
               </section>
             )}
