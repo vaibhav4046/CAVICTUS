@@ -24,6 +24,7 @@ export interface AgentBody {
   sites?: string;
   equityGoal?: string;
   memoryContext?: string;
+  dataset?: string;
   previousOutputs?: {
     step1?: string;
     step2?: string;
@@ -254,6 +255,17 @@ Use the following headings exactly in Markdown:
 
     default:
       throw new Error("Invalid agent step requested.");
+  }
+
+  // If the user uploaded real data, make it the authoritative source the agents
+  // must ground their numbers in — this is what turns the pipeline from a
+  // generic demo into a tool grounded in the user's actual situation.
+  if (body.dataset && body.dataset.trim() && step !== "5") {
+    userPrompt += `\n\n# PRIMARY DATA — uploaded by the user
+Treat this as the most authoritative source. Ground every number in it, reference specific rows/columns, and never invent figures that contradict it. If a needed value is absent, say so as a data gap rather than guessing.
+\`\`\`
+${body.dataset.slice(0, 4000)}
+\`\`\``;
   }
 
   return { systemInstruction, userPrompt, useGrounding };

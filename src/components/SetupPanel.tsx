@@ -5,7 +5,7 @@ import { DecisionConstraints } from "../types";
 interface SetupPanelProps {
   isPipelineRunning: boolean;
   isPipelineDone: boolean;
-  onRunPipeline: (category: string, situation: string, constraints: DecisionConstraints) => void;
+  onRunPipeline: (category: string, situation: string, constraints: DecisionConstraints, dataset?: string) => void;
   onReset: () => void;
   // Support loading a saved record template
   loadedTemplate: {
@@ -23,6 +23,8 @@ export default function SetupPanel(props: SetupPanelProps) {
   const [budget, setBudget] = useState("300,000");
   const [sites, setSites] = useState("4");
   const [equityGoal, setEquityGoal] = useState("Prioritize heat-vulnerable, low-AC, low-transit neighborhoods");
+  const [datasetText, setDatasetText] = useState("");
+  const [datasetName, setDatasetName] = useState("");
 
   // Load selected template if clicked from Decision Memory
   useEffect(() => {
@@ -35,14 +37,29 @@ export default function SetupPanel(props: SetupPanelProps) {
     }
   }, [props.loadedTemplate]);
 
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "").slice(0, 8000);
+      const rows = text.trim().split("\n").length;
+      const cols = (text.split("\n")[0] || "").split(",").length;
+      setDatasetText(text);
+      setDatasetName(`${file.name} · ${rows} rows × ${cols} cols`);
+    };
+    reader.readAsText(file);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (props.isPipelineRunning) return;
-    props.onRunPipeline(category, situation, {
-      budget,
-      sites,
-      equityGoal,
-    });
+    props.onRunPipeline(
+      category,
+      situation,
+      { budget, sites, equityGoal },
+      datasetText
+    );
   };
 
   const isLocked = props.isPipelineRunning || props.isPipelineDone;
@@ -177,6 +194,30 @@ export default function SetupPanel(props: SetupPanelProps) {
                 Distribute locations equally by geographic census blocks
               </option>
             </select>
+          </div>
+
+          {/* Real data upload — grounds the agents in YOUR numbers, not estimates */}
+          <div className="space-y-1.5 col-span-1 md:col-span-2">
+            <label htmlFor="dataset-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
+              Ground in your data (CSV, optional)
+            </label>
+            <input
+              id="dataset-input"
+              type="file"
+              accept=".csv,.tsv,.txt"
+              disabled={isLocked}
+              onChange={handleFile}
+              className="w-full text-xs text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-accent/10 file:text-accent hover:file:bg-accent/20 file:cursor-pointer border border-dashed border-border-line rounded-xl p-2 bg-surface-solid dark:bg-[#121620] disabled:opacity-60 cursor-pointer transition-colors"
+            />
+            {datasetName ? (
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                ✓ Grounded in {datasetName} — the agents will use your real figures and cite them.
+              </p>
+            ) : (
+              <p className="text-[10px] text-muted/70 leading-relaxed">
+                Upload real data (e.g. heat-vulnerability, AC, transit by tract) and the agents ground every number in it instead of estimating.
+              </p>
+            )}
           </div>
         </div>
 
