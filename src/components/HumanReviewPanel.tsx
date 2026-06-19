@@ -71,6 +71,10 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   const [checkEquity, setCheckEquity] = useState(false);
   const [checkCommunity, setCheckCommunity] = useState(false);
 
+  // "Demonstrably reasoned" — the official must engage a specific data gap or
+  // dissenting voice, not merely tick boxes (guards against rubber-stamp oversight).
+  const [reasonedNote, setReasonedNote] = useState("");
+
   // Form to add a new reviewer state
   const [isAddingReviewer, setIsAddingReviewer] = useState(false);
   const [newRevName, setNewRevName] = useState("");
@@ -100,6 +104,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   const isValid =
     decisionType !== "" &&
     humanRationale.trim().length > 0 &&
+    reasonedNote.trim().length >= 12 &&
     checkDataGaps &&
     checkEquity &&
     checkCommunity;
@@ -110,7 +115,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
     props.onFinalize({
       decisionType: decisionType as HumanDecisionType,
       chosenOption,
-      humanRationale,
+      humanRationale: `${humanRationale}\n\nReasoned engagement (data gap / dissenting voice weighed): ${reasonedNote.trim()}`,
       checks: {
         dataGaps: checkDataGaps,
         equity: checkEquity,
@@ -285,6 +290,25 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
                 placeholder="Provide a clear physical explanation, budget defense, or public advocacy rationale detailing why this path was chosen..."
                 className="w-full text-xs border border-border-line p-3.5 rounded-xl text-ink bg-surface-solid dark:bg-[#121620] placeholder-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none resize-none disabled:bg-surface/30 disabled:opacity-60 disabled:cursor-not-allowed leading-relaxed font-sans transition-colors"
               />
+            </div>
+
+            {/* Demonstrably-reasoned engagement — not just "human present" */}
+            <div className="space-y-1.5">
+              <label htmlFor="reasoned-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
+                Reasoned engagement <span className="text-rose-500 font-bold">*</span>
+              </label>
+              <textarea
+                id="reasoned-input"
+                rows={3}
+                disabled={props.isFinalized}
+                value={reasonedNote}
+                onChange={(e) => setReasonedNote(e.target.value)}
+                placeholder="Name ONE specific data gap or dissenting council voice you weighed, and how it changed (or confirmed) your decision."
+                className="w-full text-xs border border-border-line p-3.5 rounded-xl text-ink bg-surface-solid dark:bg-[#121620] placeholder-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none resize-none disabled:bg-surface/30 disabled:opacity-60 disabled:cursor-not-allowed leading-relaxed transition-colors"
+              />
+              <p className="text-[10px] text-muted/80 leading-relaxed">
+                Required so oversight is <strong className="text-ink">meaningful, not a rubber-stamp</strong> (Green, 2022). Finalize stays locked until you engage a specific gap or dissent.
+              </p>
             </div>
 
             {/* Verification checklists */}
