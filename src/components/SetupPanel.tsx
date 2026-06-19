@@ -211,7 +211,7 @@ export default function SetupPanel(props: SetupPanelProps) {
             />
             {datasetName ? (
               <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                ✓ Grounded in {datasetName} — the agents will use your real figures and cite them.
+                Grounded in {datasetName} — the agents will use your real figures and cite them.
               </p>
             ) : (
               <p className="text-[10px] text-muted/70 leading-relaxed">

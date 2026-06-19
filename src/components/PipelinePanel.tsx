@@ -380,7 +380,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                     {isDone && (
                       <span className="text-emerald-500 flex items-center gap-1">
                         <Check className="w-3 h-3 text-emerald-500 shrink-0" />
-                        ✓ OK
+                        OK
                       </span>
                     )}
                     {isError && (

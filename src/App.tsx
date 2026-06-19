@@ -13,6 +13,7 @@ import CouncilPanel, { ChannelStatus } from "./components/CouncilPanel";
 import Landing from "./components/Landing";
 import Onboarding from "./components/Onboarding";
 import VoiceAgent from "./components/VoiceAgent";
+import LedgerPanel from "./components/LedgerPanel";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
 import { downloadDecisionBrief, getConfidencePill } from "./utils";
 
@@ -1016,9 +1017,6 @@ export default function App() {
               <h1 className="text-base font-display font-extrabold tracking-tight text-ink" id="civitas-brand">
                 CIVICTAS
               </h1>
-              <span className="text-[9px] uppercase font-mono tracking-wider bg-slate-100 dark:bg-slate-800 text-muted font-bold px-1.5 py-0.5 rounded border border-border-line">
-                PRO v1
-              </span>
             </div>
             <p className="text-[10px] text-muted font-bold -mt-1 tracking-wide">Community Decision Copilot</p>
           </div>
@@ -1183,6 +1181,9 @@ export default function App() {
           {isPipelineDone && !isPipelineRunning && (
             <VoiceAgent proposal={extractRecommendationValue()} />
           )}
+
+          {/* Tamper-evident decision ledger (real SHA-256 hash chain) */}
+          <LedgerPanel items={memoryItems} />
 
           {/* Active Google Workspace Connect integration panel */}
           {isPipelineDone && !isPipelineRunning && (
