@@ -20,17 +20,17 @@ export default function Sidebar(props: SidebarProps) {
   return (
     <aside
       id="decision-memory-sidebar"
-      className="w-full md:w-[270px] shrink-0 border-r border-border-line bg-surface-solid dark:bg-[#11141D] flex flex-col h-[calc(100vh-64px)] overflow-hidden font-sans transition-colors duration-300"
+      className="w-full md:w-[270px] shrink-0 border-b md:border-b-0 md:border-r border-border-line bg-surface-solid dark:bg-[#11141D] flex flex-col md:h-[calc(100vh-64px)] overflow-hidden font-sans transition-colors duration-300"
     >
       {/* Top action */}
       <div className="p-4 shrink-0">
         <button
           id="new-decision-btn"
           onClick={props.onNewDecision}
-          className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 text-white rounded-xl text-xs font-bold shadow-lg shadow-accent/15 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+          className="w-full py-2.5 bg-accent text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          + New Decision
+          New decision
         </button>
       </div>
 
