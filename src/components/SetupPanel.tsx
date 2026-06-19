@@ -195,7 +195,7 @@ export default function SetupPanel(props: SetupPanelProps) {
         )}
 
         {props.isPipelineRunning && (
-          <div className="p-4 bg-[#6366F1]/5 border border-[#6366F1]/20 rounded-xl flex items-center gap-4 animate-pulse" id="running-hint-banner">
+          <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl flex items-center gap-4 animate-pulse" id="running-hint-banner">
             <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin shrink-0" />
             <div className="text-xs text-ink/90 leading-relaxed">
               <span className="font-bold text-accent mr-1">Pipeline Active:</span> Sequential AI simulation is modeling demographics, public datasets, and risk indicators. Please do not close this window.

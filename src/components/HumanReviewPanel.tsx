@@ -595,7 +595,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
                 href={props.notificationStatus.reviewLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-1 text-[10px] font-mono font-bold bg-[#7C5CF0]/10 dark:bg-[#A48CFF]/10 text-[#7C5CF0] dark:text-[#A48CFF] hover:bg-accent/15 border border-[#7C5CF0]/25 dark:border-[#A48CFF]/20 py-2 rounded-lg cursor-pointer transition-all uppercase tracking-wider"
+                className="w-full flex items-center justify-center gap-1 text-[10px] font-mono font-bold bg-accent/10 text-accent hover:bg-accent/15 border border-accent/25 py-2 rounded-lg cursor-pointer transition-all uppercase tracking-wider"
               >
                 Launch Review Landing Link
                 <ExternalLink className="w-3 h-3 shrink-0" />
