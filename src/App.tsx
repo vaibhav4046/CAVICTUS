@@ -949,17 +949,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col font-sans transition-colors duration-300 relative overflow-hidden" id="civitas-root">
       
-      {/* 🔮 Background Subtle Floating Orbs — Extremely Minimal & Soft G Suite Aesthetics */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-        <div className="absolute top-[8%] left-[15%] w-[35vw] h-[35vw] rounded-full bg-blue-400/8 dark:bg-blue-500/3 blur-[120px] animate-float-slow" />
-        <div className="absolute bottom-[20%] right-[10%] w-[38vw] h-[38vw] rounded-full bg-teal-400/6 dark:bg-teal-500/2.5 blur-[140px] animate-float-reverse" />
-        <div className="absolute top-[45%] left-[55%] w-[25vw] h-[25vw] rounded-full bg-indigo-400/6 dark:bg-indigo-500/2 blur-[100px] animate-float-slow" />
+      {/* Calm, flat background. In dark mode only, one barely-there static glow. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 hidden dark:block" aria-hidden="true">
+        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-indigo-500/5 blur-[140px]" />
       </div>
 
       {/* Premium Top Navigation bar */}
       <header
         id="top-navigation"
-        className="h-16 border-b border-border-line bg-surface/75 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-6 select-none transition-colors duration-300 relative"
+        className="h-16 border-b border-border-line bg-surface-solid sticky top-0 z-40 flex items-center justify-between px-6 select-none transition-colors duration-300 relative"
       >
         <div className="flex items-center gap-3">
           {/* Glassmorphic Transparent Civic Shield Logo */}
