@@ -1,0 +1,408 @@
+/**
+ * Shared multi-agent decision pipeline logic.
+ *
+ * This module is the single source of truth for the five agent prompts and for
+ * how a step is streamed to the client. It is imported by BOTH the local
+ * Express dev server (server.ts) and the Vercel serverless function
+ * (api/agent/[step].ts), so prompts and behaviour never drift between them.
+ *
+ * Provider resolution (server-side only — the browser never sees a key):
+ *   1. GEMINI_API_KEY present  -> real Gemini (with Google Search grounding on step 2)
+ *   2. GROQ_API_KEY present     -> real Groq (free, fast; benchmark evidence, no live grounding)
+ *   3. neither                  -> canned mock so the demo always runs
+ * Override explicitly with LLM_PROVIDER = gemini | groq | mock.
+ */
+
+import { GoogleGenAI } from "@google/genai";
+import { getMockOutput } from "./mock.js";
+
+export interface AgentBody {
+  category?: string;
+  situation?: string;
+  budget?: string;
+  sites?: string;
+  equityGoal?: string;
+  memoryContext?: string;
+  previousOutputs?: {
+    step1?: string;
+    step2?: string;
+    step3?: string;
+    step4?: string;
+  };
+}
+
+export interface Source {
+  title: string;
+  url: string;
+}
+
+export type Provider = "gemini" | "groq" | "mock";
+
+export interface AgentMessages {
+  systemInstruction: string;
+  userPrompt: string;
+  useGrounding: boolean;
+}
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+
+export function resolveProvider(): Provider {
+  const forced = (process.env.LLM_PROVIDER || "").toLowerCase().trim();
+  if (forced === "gemini" || forced === "groq" || forced === "mock") {
+    return forced;
+  }
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  if (process.env.GROQ_API_KEY) return "groq";
+  return "mock";
+}
+
+/**
+ * Builds the system instruction and user prompt for a given pipeline step.
+ */
+export function buildAgentMessages(step: string, body: AgentBody): AgentMessages {
+  const {
+    category,
+    situation,
+    budget,
+    sites,
+    equityGoal,
+    memoryContext,
+    previousOutputs,
+  } = body;
+
+  let systemInstruction = "";
+  let userPrompt = "";
+  const useGrounding = step === "2";
+
+  switch (step) {
+    case "1":
+      systemInstruction =
+        "You are a public-policy decision analyst. Turn a messy real-world situation into a clear, structured decision. Be concrete and neutral. Do NOT recommend an option yet.";
+      userPrompt = `The user wants to resolve a hard community resource decision.
+Decision Type: ${category}
+Situation: ${situation}
+Constraints:
+- Budget: USD ${budget}
+- Number of sites/locations: ${sites}
+- Equity Goal: ${equityGoal}
+
+Historical Memory Context of past approved decisions by humans (if any):
+${memoryContext || "No prior decisions yet."}
+
+Your job is to turn this messy real-world situation into a clear, structured decision framing. Do NOT recommend an option yet. Use the following headings exactly in Markdown:
+
+# Decision goal
+[Write a single-sentence framing of the decision goal]
+
+# Candidate options
+[Propose exactly 3-4 concrete, clearly different candidate options. For each option, write a bold title and a single-line explanation. Keep each option highly actionable and specific, e.g., using mobile units, fixed allocations, etc.]
+
+# Stakeholders affected
+[Provide a list of bullet points detailing stakeholders affected. Boldly mark who is most vulnerable/at-risk.]
+
+# Key constraints
+[Summarize the budget, site counts, and equity goals from the input]
+
+# Evidence we need to choose well
+[State 3-5 specific questions about data, logistics, and constraints that the research agent should answer]
+
+If there are past decisions in the Memory Context above, please adapt your framing to reflect past learnings/conventions. Additionally, if the Memory Context indicates past decisions, append this exact tag at the very end of your output so the user can verify the context:
+[MEMORY_NOTE: Informed by past decisions | RATIONALE: A previous human decision prioritised the vulnerable — factored in.]
+If there are no past decisions (or Memory Context says "No prior decisions yet."), DO NOT include any MEMORY_NOTE tag. Make sure you don't recommend a single option. Outputs should be clean, direct, and formal.`;
+      break;
+
+    case "2":
+      systemInstruction =
+        "You are a careful research analyst. Answer each evidence question with the best available public data or a clearly-labeled reasonable benchmark. NEVER invent precise statistics; if unsure, say so and give a range. Every item carries a confidence level and explicit data gaps.";
+      userPrompt = `Below is the framing of the decision and the specific evidence questions we need to answer to choose well:
+
+${previousOutputs?.step1 || "No prior framing provided."}
+
+The core details:
+- Category: ${category}
+- Situation: ${situation}
+
+Answer each of the evidence questions asked in the previous framing. Use Google Search grounding to gather accurate public details, research real-world indicators, or provide realistic policy benchmarks.
+Never invent precise stats; if you cannot find exact figures, state a reasonable range. Every item must have an explicit confidence level and identified data gaps.
+
+Use the following headings exactly in Markdown:
+
+# Evidence
+For each question, follow this exact structure:
+### Question: [The question]
+- **Finding**: [Your findings and answers based on research and grounding. Give references and links when available.]
+- **Confidence**: [High|Medium|Low]
+- **Data gaps**: [Explicitly mention what data or verification is missing or uncertain]
+
+# Sources
+[Provide a markdown list of web links or URLs retrieved from research grounding, or write: "No external sources — benchmark estimates used" if none.]`;
+      break;
+
+    case "3":
+      systemInstruction =
+        "You are a scenario modeler. Project the outcome of EACH candidate option across three horizons (Now, 1 year, 5 years) on three decision-relevant metrics. Every cell is a specific number with units. State the key assumption behind each option. These are transparent estimates, not predictions.";
+      userPrompt = `Here is our decision framing and evidence base:
+
+### Decision Framing (Agent 1):
+${previousOutputs?.step1 || ""}
+
+### Research Evidence (Agent 2):
+${previousOutputs?.step2 || ""}
+
+The core details:
+- Category: ${category}
+- Situation: ${situation}
+
+Your job is to project the outcomes of EACH candidate option (detailed in the decision framing above) across three horizons: Now, 1 Year, and 5 Years.
+You must project each option based on THREE decision-relevant metrics (e.g., Financial Cost/Budget, People Sheltered/Served, Heat Index Reduction, Equity Coverage, etc.).
+Produce this as a clean, compliant Markdown table. Every single cell in the table MUST contain a specific number with appropriate units (e.g. "$120,000", "450 residents", "88% coverage"). NO blanks, no "varies", no estimated ranges like "50-100" in cells.
+
+Use the following headings exactly in Markdown:
+
+# Outcome comparison
+| Option | Metric | Now | 1 year | 5 years |
+[Provide table rows containing every single Proposed Option × all 3 metrics. For instance, if there are 4 options and 3 metrics, the table must have exactly 12 data rows plus headers, covering each Option + Metric combination. Fill every cell completely.]
+
+# Assumptions
+[For each option, provide exactly 1 key assumption behind the projections in a bulleted line. Make them transparent, clear, and realistic.]
+
+At the end of your response, write exactly this line in italics:
+*These are estimates for comparison, not guarantees.*`;
+      break;
+
+    case "4":
+      systemInstruction =
+        "You are an equity and responsible-AI auditor. Protect the people the data tends to miss. Be direct about trade-offs and about the risks of using AI for this decision.";
+      userPrompt = `You are auditing this policy decision to safeguard vulnerable groups and evaluate the risks of using AI in this process.
+Here is the accumulated pipeline detail:
+
+### Framing:
+${previousOutputs?.step1 || ""}
+
+### Evidence:
+${previousOutputs?.step2 || ""}
+
+### Outcomes Projections:
+${previousOutputs?.step3 || ""}
+
+The situation: ${situation}
+
+Execute a constructive equity and responsibility audit. Identify who benefits, who is underserved, what the AI/data model bias risks are, and recommend human checks.
+
+Use the following headings exactly in Markdown:
+
+# Who benefits most
+[Provide bullet points representing groups, neighborhoods, or organizations that stand to gain the most from these proposed options.]
+
+# Who is underserved or at risk of being missed
+[Provide bullet points highlighting individuals, demographics, or neighborhoods who might be left behind or underserved by the metrics or options, and why.]
+
+# ⚠ AI / data risk
+[Name exactly ONE realistic, high-impact risk of using AI or data models for this decision, such as underrepresenting heat vulnerability due to stale census data or digital divide in community feedback.]
+
+# How CIVICTAS reduces this risk
+[List 2-3 concrete design features or methods that CIVICTAS implements to mitigate this risk, such as human override protocols, clear tracking of data gaps, etc.]
+
+Recommended human check before acting: [Provide exactly one concrete, physical, or organizational check the human decision-maker should do on-the-ground, such as conducting high-vulnerability door-to-door temperature surveys or listening sessions before final allocations.]`;
+      break;
+
+    case "5":
+      systemInstruction =
+        "You are a clear-writing chief of staff for a busy, non-technical official. Plain language. Be honest about limits. Present a recommendation but frame it as a PROPOSAL for a human to decide.";
+      userPrompt = `Prepare a plain-language summary and a draft recommendation brief for a busy, non-technical city offical, based on the entire agent pipeline outputs:
+
+### Decision Framing:
+${previousOutputs?.step1 || ""}
+
+### Research Evidence:
+${previousOutputs?.step2 || ""}
+
+### Simulation Outcomes:
+${previousOutputs?.step3 || ""}
+
+### Equity & Risk Audit:
+${previousOutputs?.step4 || ""}
+
+The situation: ${situation}
+
+Synthesize a plain-language proposal. Be humble about limitations, clearly advise on trade-offs, and suggest the recommended option along with a confidence rating (High, Medium, or Low).
+
+Use the following headings exactly in Markdown:
+
+# Recommended option (proposal)
+[State the proposed option in bold and include a confidence rating, exactly formatted as (Confidence: High|Medium|Low). E.g., **Option C: Vulnerability-Weighted Center Plan** (Confidence: High)]
+
+# Top 3 reasons
+[State the top 3 arguments/reasons for proposing this option, in a clean list.]
+
+# Main trade-off
+[Explain the primary disadvantage, drawback, cost, or trade-off associated with this choice in plain, non-technical language.]
+
+# What CIVICTAS does NOT know / should not decide alone
+[Write down what information is missing, what political/policy issues the AI cannot handle, and what values belong entirely to human democratic decision-making.]`;
+      break;
+
+    default:
+      throw new Error("Invalid agent step requested.");
+  }
+
+  return { systemInstruction, userPrompt, useGrounding };
+}
+
+export interface StreamCallbacks {
+  onText: (text: string) => void;
+  onSources?: (sources: Source[]) => void;
+}
+
+/**
+ * Runs one pipeline step and streams text through the provided callbacks.
+ * Throws on provider/API failure so the caller can emit an [ERROR:] marker.
+ */
+export async function runAgentStream(
+  step: string,
+  body: AgentBody,
+  cb: StreamCallbacks
+): Promise<void> {
+  const provider = resolveProvider();
+  if (provider === "mock") {
+    return runMock(step, body, cb);
+  }
+  if (provider === "groq") {
+    return runGroq(step, body, cb);
+  }
+  return runGemini(step, body, cb);
+}
+
+async function runMock(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
+  const { text, sources } = getMockOutput(step, body);
+  // Simulate streaming so the demo feels identical to a live model run.
+  const chunks = chunkText(text, 64);
+  for (const chunk of chunks) {
+    cb.onText(chunk);
+    await sleep(14);
+  }
+  if (sources && sources.length && cb.onSources) {
+    cb.onSources(sources);
+  }
+}
+
+async function runGemini(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+  const ai = new GoogleGenAI({
+    apiKey,
+    httpOptions: { headers: { "User-Agent": "civictas-app" } },
+  });
+
+  const { systemInstruction, userPrompt, useGrounding } = buildAgentMessages(step, body);
+
+  const responseStream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL,
+    contents: userPrompt,
+    config: {
+      systemInstruction,
+      tools: useGrounding ? [{ googleSearch: {} }] : undefined,
+      temperature: 0.2,
+    },
+  });
+
+  const collected: Source[] = [];
+  for await (const chunk of responseStream) {
+    if (chunk.text) cb.onText(chunk.text);
+    if (useGrounding) {
+      const metadata = chunk.candidates?.[0]?.groundingMetadata;
+      const gChunks = metadata?.groundingChunks || [];
+      for (const g of gChunks) {
+        if (g.web?.uri) {
+          collected.push({ title: g.web.title || g.web.uri, url: g.web.uri });
+        }
+      }
+    }
+  }
+
+  if (useGrounding && collected.length && cb.onSources) {
+    cb.onSources(dedupeSources(collected));
+  }
+}
+
+async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY is missing.");
+
+  const { systemInstruction, userPrompt } = buildAgentMessages(step, body);
+
+  const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature: 0.2,
+      stream: true,
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!resp.ok || !resp.body) {
+    const errText = await safeText(resp);
+    throw new Error(`Groq API error (${resp.status}): ${errText.slice(0, 200)}`);
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  // Node 18+ fetch body is an async-iterable ReadableStream of Uint8Array.
+  for await (const part of resp.body as unknown as AsyncIterable<Uint8Array>) {
+    buffer += decoder.decode(part, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === "[DONE]") return;
+      try {
+        const json = JSON.parse(data);
+        const delta = json.choices?.[0]?.delta?.content;
+        if (delta) cb.onText(delta);
+      } catch {
+        // Partial JSON across chunk boundary — ignore and wait for more.
+      }
+    }
+  }
+}
+
+function chunkText(text: string, size: number): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < text.length; i += size) {
+    out.push(text.slice(i, i + size));
+  }
+  return out;
+}
+
+function dedupeSources(sources: Source[]): Source[] {
+  const seen = new Set<string>();
+  return sources.filter((s) => {
+    if (!s.url || seen.has(s.url)) return false;
+    seen.add(s.url);
+    return true;
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function safeText(resp: Response): Promise<string> {
+  try {
+    return await resp.text();
+  } catch {
+    return "unreadable error body";
+  }
+}

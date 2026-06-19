@@ -1,5 +1,5 @@
 /**
- * Google Workspace APIs Integration Utilities for CIVITAS
+ * Google Workspace APIs Integration Utilities for CIVICTAS
  */
 
 export interface CalendarEventParams {

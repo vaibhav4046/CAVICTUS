@@ -436,7 +436,7 @@ export default function App() {
     setHumanRationale("");
     setChecks({ dataGaps: false, equity: false, community: false });
 
-    const initialStates = {
+    const initialStates: { 1: AgentState; 2: AgentState; 3: AgentState; 4: AgentState; 5: AgentState } = {
       1: { status: "queued", output: "" },
       2: { status: "queued", output: "" },
       3: { status: "queued", output: "" },
@@ -586,6 +586,23 @@ export default function App() {
         return updated;
       });
     }
+  };
+
+  /**
+   * One-click sample run for first-time visitors (NotebookLM-style "try it").
+   * Runs the seeded Riverside cooling-center decision so a judge sees a full
+   * pipeline in one click — no setup required.
+   */
+  const handleRunSample = () => {
+    handleRunPipeline(
+      "Cooling centers (extreme heat)",
+      "Riverside, a mid-size city, expects 20+ extreme-heat days this summer. The health department has a $300,000 budget to open cooling centers and can staff up to 4 sites. Last year, two heat deaths occurred in the low-income Eastside, which has the fewest air-conditioned homes and the least transit access. We need to choose 4 locations that protect the most at-risk residents, not just the most people.",
+      {
+        budget: "300,000",
+        sites: "4",
+        equityGoal: "Prioritize heat-vulnerable, low-AC, low-transit neighborhoods",
+      }
+    );
   };
 
   /**
@@ -782,12 +799,15 @@ export default function App() {
     setHumanRationale("");
     setChecks({ dataGaps: false, equity: false, community: false });
     
-    // Clear back to empty
-    setCategory("");
-    setSituation("");
-    setBudget("");
-    setSites("");
-    setEquityGoal("");
+    // Reseed the default sample scenario so "New Decision" never lands on a
+    // dead/blank screen — a fresh visitor always sees a runnable example.
+    setCategory("Cooling centers (extreme heat)");
+    setSituation(
+      "Riverside, a mid-size city, expects 20+ extreme-heat days this summer. The health department has a $300,000 budget to open cooling centers and can staff up to 4 sites. Last year, two heat deaths occurred in the low-income Eastside, which has the fewest air-conditioned homes and the least transit access. We need to choose 4 locations that protect the most at-risk residents, not just the most people."
+    );
+    setBudget("300,000");
+    setSites("4");
+    setEquityGoal("Prioritize heat-vulnerable, low-AC, low-transit neighborhoods");
 
     setAgentStates({
       1: { status: "queued", output: "" },
@@ -1063,10 +1083,7 @@ export default function App() {
           />
 
           {!isPipelineRunning && !isPipelineDone && !selectedItemId && (
-            <EmptyState onStart={() => {
-              const el = document.querySelector('input, textarea') as HTMLElement;
-              el?.focus();
-            }} />
+            <EmptyState onRunSample={handleRunSample} />
           )}
 
           {/* Active sequence advisors pipeline cards */}

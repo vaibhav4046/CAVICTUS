@@ -70,26 +70,74 @@ export default function PipelinePanel(props: PipelinePanelProps) {
   ];
 
   /**
-   * Safe HTML text renderer with inline **bold** and *italics* support.
+   * Only http/https/mailto links are allowed to render as anchors. Model output
+   * (including grounded search URLs) is never trusted — javascript:/data: and
+   * any other scheme falls back to plain text. Prevents stored XSS.
    */
-  const renderFormattedLine = (line: string) => {
-    if (!line) return "";
-    
-    // Replace markdown links: [label](url) -> anchor
-    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    
-    // Simplistic extraction of bold **text**
-    const boldRegex = /\*\*([^*]+)\*\*/g;
-    
-    return (
-      <span
-        dangerouslySetInnerHTML={{
-          __html: line
-            .replace(linkRegex, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-accent dark:text-accent-2 hover:underline inline-flex items-center gap-0.5 font-semibold">$1 <span class="text-[9px]">↗</span></a>')
-            .replace(boldRegex, '<strong class="font-bold text-ink">$1</strong>')
-        }}
-      />
-    );
+  const safeUrl = (raw: string): string | null => {
+    try {
+      const u = new URL(raw, window.location.origin);
+      if (u.protocol === "http:" || u.protocol === "https:" || u.protocol === "mailto:") {
+        return u.href;
+      }
+    } catch {
+      /* malformed URL — treat as plain text */
+    }
+    return null;
+  };
+
+  /**
+   * Safe inline renderer for **bold** and [label](url). Builds real React nodes
+   * via tokenization — NO dangerouslySetInnerHTML, so model output cannot inject
+   * markup or scripts into the DOM.
+   */
+  const renderFormattedLine = (line: string): React.ReactNode => {
+    if (!line) return null;
+
+    const pattern = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))/g;
+    const nodes: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let key = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(line)) !== null) {
+      if (match.index > lastIndex) {
+        nodes.push(line.slice(lastIndex, match.index));
+      }
+      if (match[1]) {
+        // **bold**
+        nodes.push(
+          <strong key={key++} className="font-bold text-ink">
+            {match[2]}
+          </strong>
+        );
+      } else if (match[3]) {
+        // [label](url)
+        const url = safeUrl(match[5]);
+        if (url) {
+          nodes.push(
+            <a
+              key={key++}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent dark:text-accent-2 hover:underline inline-flex items-center gap-0.5 font-semibold"
+            >
+              {match[4]} <span className="text-[9px]">↗</span>
+            </a>
+          );
+        } else {
+          nodes.push(match[4]);
+        }
+      }
+      lastIndex = pattern.lastIndex;
+    }
+
+    if (lastIndex < line.length) {
+      nodes.push(line.slice(lastIndex));
+    }
+
+    return nodes;
   };
 
   /**
