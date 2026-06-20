@@ -219,6 +219,12 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
 
   const handleDisconnect = () => {
     setToken(null);
+    // Clear the persisted token on disconnect so it can't linger in storage.
+    try {
+      localStorage.removeItem("civitas_gwork_sandbox_token");
+    } catch {
+      /* ignore */
+    }
     if (isSandboxMode) {
       setSandboxToken("");
     }
