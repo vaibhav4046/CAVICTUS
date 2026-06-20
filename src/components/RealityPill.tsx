@@ -9,6 +9,7 @@
 
 export type RealityKind =
   | "live"
+  | "ready"
   | "mock"
   | "simulated"
   | "needs-credentials"
@@ -26,6 +27,11 @@ const STYLES: Record<RealityKind, KindStyle> = {
     label: "Live",
     cls: "bg-positive/10 text-positive border-positive/25",
     dot: "bg-positive",
+  },
+  ready: {
+    label: "Ready",
+    cls: "bg-surface-2 text-muted border-border-strong",
+    dot: "bg-accent",
   },
   mock: {
     label: "Mock",

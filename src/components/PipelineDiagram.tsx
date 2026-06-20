@@ -110,7 +110,7 @@ const STAGES: Stage[] = [
     kicker: "Outputs",
     title: "Accountable record",
     icon: ScrollText,
-    chip: "bg-positive/12 text-positive",
+    chip: "bg-positive/10 text-positive",
     count: "4 artifacts",
     items: [
       { icon: ScrollText, label: "Decision record" },

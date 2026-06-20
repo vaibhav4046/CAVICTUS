@@ -122,7 +122,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
     if (props.recommendedOption && !chosenOption && !props.isFinalized) {
       setChosenOption(props.recommendedOption);
     }
-  }, [props.recommendedOption, props.isFinalized]);
+  }, [props.recommendedOption, props.isFinalized, chosenOption]);
 
   // Handle radio select changes to adapt the Chosen Option text area
   const handleDecisionTypeChange = (type: HumanDecisionType) => {
@@ -236,7 +236,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
             <span
               id="awaiting-badge"
               aria-live="polite"
-              className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold bg-warning/15 text-warning border border-warning/25 px-3 py-1.5 rounded-xl animate-pulse"
+              className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold bg-warning/15 text-warning border-l-2 border-warning px-3 py-1.5 rounded-xl"
             >
               <Hourglass className="w-3 h-3" aria-hidden="true" />
               AWAITING OVERSIGHT
