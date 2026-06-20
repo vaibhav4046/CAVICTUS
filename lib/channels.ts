@@ -80,10 +80,11 @@ async function sendTelegram(p: ReviewPayload): Promise<ChannelStatus> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        // Plain text (no parse_mode) so attacker-controlled decision fields
+        // cannot inject Markdown links; button URL restricted to http(s).
         chat_id: chatId,
-        text: `🏛️ *CIVICTAS — human review needed*\n\n*${p.title}*\nProposal: ${p.proposal}\nAI confidence: ${p.confidence}`,
-        parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: [[{ text: "✅ Open & decide", url: p.reviewLink }]] },
+        text: `CIVICTAS — human review needed\n\n${p.title}\nProposal: ${p.proposal}\nAI confidence: ${p.confidence}`,
+        reply_markup: { inline_keyboard: [[{ text: "Open & decide", url: safeHttpUrl(p.reviewLink) }]] },
       }),
     });
     const ok = resp.ok;

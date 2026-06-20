@@ -8,6 +8,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+  // Same shared-secret gate as the other routes: open in the default demo,
+  // not an unauthenticated live-LLM cost endpoint when a secret is configured.
+  const sharedSecret = process.env.API_SHARED_SECRET || "";
+  if (sharedSecret && req.headers["x-civictas-key"] !== sharedSecret) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const b = (req.body || {}) as Record<string, string>;
   res.setHeader("Cache-Control", "no-store");
   try {
