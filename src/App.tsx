@@ -377,8 +377,10 @@ export default function App() {
           setIsPipelineRunning(false);
           setIsFinalized(draft.isFinalized || false);
 
-          const reviewerName = "Dr. A. Mensah";
-          const channel = "Telegram";
+          // Use the actually-configured reviewer, never a hardcoded placeholder name.
+          const activeReviewer = reviewers[selectedReviewerIndex] || reviewers[0];
+          const reviewerName = activeReviewer?.name || "Reviewer";
+          const channel = activeReviewer?.channel || "Email";
           const revLink = `${window.location.origin}${window.location.pathname}?review=${reviewId}`;
           const confidence = getConfidencePill(draft.step5Output || "") || "High";
           let proposal = draft.decisionType;
@@ -1338,6 +1340,7 @@ export default function App() {
                       <a
                         href={`#${s.anchor}`}
                         aria-current={state === "current" ? "step" : undefined}
+                        aria-label={`${s.label}${state === "done" ? ", completed" : state === "current" ? ", current step" : ", upcoming step"}`}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                           state === "current"
                             ? "bg-accent text-on-accent"

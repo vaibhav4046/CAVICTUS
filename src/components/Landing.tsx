@@ -11,6 +11,12 @@ interface LandingProps {
 export default function Landing({ onEnter, engine }: LandingProps) {
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col">
+      <a
+        href="#landing-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-on-accent focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        Skip to main content
+      </a>
       {/* slim top bar */}
       <header className="h-16 flex items-center justify-between px-6 md:px-10 max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-2.5">
@@ -26,7 +32,7 @@ export default function Landing({ onEnter, engine }: LandingProps) {
       </header>
 
       {/* hero */}
-      <main className="flex-1 flex flex-col items-center px-6 max-w-5xl mx-auto w-full py-16">
+      <main id="landing-main" className="flex-1 flex flex-col items-center px-6 max-w-5xl mx-auto w-full py-16">
         <div className="flex flex-col items-center text-center max-w-3xl">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold text-muted bg-surface border border-border-line rounded-full px-3 py-1 mb-8">
             <Search className="w-3 h-3" aria-hidden="true" />
