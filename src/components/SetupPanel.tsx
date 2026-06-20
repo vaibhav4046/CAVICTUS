@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Play, RotateCcw, ShieldCheck } from "lucide-react";
 import { DecisionConstraints } from "../types";
+import Select, { SelectOption } from "./Select";
+
+const CATEGORY_OPTIONS: SelectOption[] = [
+  { value: "Cooling centers (extreme heat)", label: "Cooling centers (extreme heat)" },
+  { value: "Warming shelters (winter)", label: "Warming shelters (winter)" },
+  { value: "Mobile health van routes", label: "Mobile health van routes" },
+  { value: "Affordable Housing Site allocation", label: "Affordable Housing Site allocation" },
+  { value: "Custom Community Resource Plan", label: "Custom Community Resource Plan" },
+];
+
+const EQUITY_OPTIONS: SelectOption[] = [
+  { value: "Prioritize heat-vulnerable, low-AC, low-transit neighborhoods", label: "Prioritize heat-vulnerable, low-AC, low-transit neighborhoods" },
+  { value: "Prioritize highest-risk blocks over raw footfall", label: "Prioritize highest-risk blocks over total footfall (vulnerability index)" },
+  { value: "Prioritize transit-poor zones and car-less residents", label: "Prioritize transit-poor zones and car-less residents (access gap)" },
+  { value: "Maximize overall footfall and central transit hub reach", label: "Maximize overall footfall and core central service hubs" },
+  { value: "Distribute equally by geographical census blocks", label: "Distribute locations equally by geographic census blocks" },
+];
 
 interface SetupPanelProps {
   isPipelineRunning: boolean;
@@ -97,22 +114,17 @@ export default function SetupPanel(props: SetupPanelProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Decision Category */}
           <div className="space-y-1.5 col-span-1 md:col-span-2">
-            <label htmlFor="decision-type-select" className="block text-xs font-bold text-muted uppercase tracking-wide">
+            <label id="decision-type-label" className="block text-xs font-bold text-muted uppercase tracking-wide">
               Decision category
             </label>
-            <select
+            <Select
               id="decision-type-select"
+              ariaLabelledby="decision-type-label"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              options={CATEGORY_OPTIONS}
+              onChange={setCategory}
               disabled={isLocked}
-              className={`${inputBase} p-3 font-medium cursor-pointer`}
-            >
-              <option value="Cooling centers (extreme heat)">Cooling centers (extreme heat)</option>
-              <option value="Warming shelters (winter)">Warming shelters (winter)</option>
-              <option value="Mobile health van routes">Mobile health van routes</option>
-              <option value="Affordable Housing Site allocation">Affordable Housing Site allocation</option>
-              <option value="Custom Community Resource Plan">Custom Community Resource Plan</option>
-            </select>
+            />
           </div>
 
           {/* Situation Text */}
@@ -176,32 +188,17 @@ export default function SetupPanel(props: SetupPanelProps) {
 
           {/* Equity Guidelines */}
           <div className="space-y-1.5 col-span-1 md:col-span-2">
-            <label htmlFor="equity-goal-select" className="block text-xs font-bold text-muted uppercase tracking-wide">
+            <label id="equity-goal-label" className="block text-xs font-bold text-muted uppercase tracking-wide">
               Principal equity priority target
             </label>
-            <select
+            <Select
               id="equity-goal-select"
+              ariaLabelledby="equity-goal-label"
               value={equityGoal}
-              onChange={(e) => setEquityGoal(e.target.value)}
+              options={EQUITY_OPTIONS}
+              onChange={setEquityGoal}
               disabled={isLocked}
-              className={`${inputBase} p-3 font-medium cursor-pointer`}
-            >
-              <option value="Prioritize heat-vulnerable, low-AC, low-transit neighborhoods">
-                Prioritize heat-vulnerable, low-AC, low-transit neighborhoods
-              </option>
-              <option value="Prioritize highest-risk blocks over raw footfall">
-                Prioritize highest-risk blocks over total footfall (vulnerability index)
-              </option>
-              <option value="Prioritize transit-poor zones and car-less residents">
-                Prioritize transit-poor zones and car-less residents (access gap)
-              </option>
-              <option value="Maximize overall footfall and central transit hub reach">
-                Maximize overall footfall and core central service hubs
-              </option>
-              <option value="Distribute equally by geographical census blocks">
-                Distribute locations equally by geographic census blocks
-              </option>
-            </select>
+            />
           </div>
 
           {/* Real data upload — grounds the agents in YOUR numbers, not estimates */}
