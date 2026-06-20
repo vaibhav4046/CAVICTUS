@@ -159,7 +159,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
           <button
             id="modal-understand-btn"
             onClick={onClose}
-            className="px-4 py-2 bg-accent hover:opacity-90 text-white font-medium text-sm rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-accent/20 outline-none"
+            className="px-4 py-2 bg-accent hover:opacity-90 text-on-accent font-medium text-sm rounded-lg shadow-sm transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
           >
             I Understand the Protocol
           </button>
