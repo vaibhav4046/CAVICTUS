@@ -42,6 +42,19 @@ function readPreferences(): string {
   }
 }
 
+/**
+ * Strip internal telemetry tags from an agent's raw stream before it is committed
+ * to state. These tags ([METADATA_JSON:…] carries grounding sources, [MEMORY_NOTE:…]
+ * marks past-decision influence) are parsed elsewhere and must never leak into the
+ * visible brief, the PDF export, the ledger hash, or a share link.
+ */
+function cleanAgentOutput(raw: string): string {
+  const metaIdx = raw.indexOf("[METADATA_JSON:");
+  let out = metaIdx !== -1 ? raw.slice(0, metaIdx) : raw;
+  out = out.replace(/\[MEMORY_NOTE:[^\]]*\]/g, "");
+  return out.trim();
+}
+
 export default function App() {
   const confirm = useConfirm();
   const notify = useNotify();
@@ -191,6 +204,10 @@ export default function App() {
   // True while a run uses the deterministic demo path (forced mock), so outputs
   // are labelled honestly as canned examples rather than live AI.
   const [ranInDemo, setRanInDemo] = useState(false);
+  // True only once a real (non-demo, non-mock) agent response has streamed this
+  // session. The engine badge stays an honest "Ready" until then — never a green
+  // "Live" just because a key is configured (runs can still fall back to demo).
+  const [hasLiveSuccess, setHasLiveSuccess] = useState(false);
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
   const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
@@ -511,6 +528,7 @@ export default function App() {
     setIsFinalized(false);
     setPipelineError(null);
     setRanInDemo(demo);
+    setHasLiveSuccess(false);
     setGroundingSources([]);
     setChannels([]);
     setDataset(ds || "");
@@ -620,6 +638,7 @@ export default function App() {
             // Wait for full buffer completion if truncated
           }
         }
+        displayText = displayText.replace(/\[MEMORY_NOTE:[^\]]*\]/g, "");
 
         setAgentStates((prev) => ({
           ...prev,
@@ -627,12 +646,20 @@ export default function App() {
         }));
       }
 
+      const finalOutput = cleanAgentOutput(stepAccumulator);
       setAgentStates((prev) => ({
         ...prev,
-        [stepNum]: { status: "done", output: stepAccumulator },
+        [stepNum]: { status: "done", output: finalOutput },
       }));
 
-      return stepAccumulator;
+      // A real step completed without error. If this was not a forced-demo run and
+      // a live engine is configured, that is a genuine live response — only now may
+      // the engine badge claim "Live".
+      if (!demo && engine && engine.provider !== "mock" && finalOutput) {
+        setHasLiveSuccess(true);
+      }
+
+      return finalOutput;
     };
 
     try {
@@ -658,7 +685,7 @@ export default function App() {
       
       const draftId = `draft-${Date.now()}`;
       setActiveReviewId(draftId);
-      triggerNotificationFlow(cat, sit, runOutputs.step5, draftId, runOutputs);
+      await triggerNotificationFlow(cat, sit, runOutputs.step5, draftId, runOutputs);
     } catch (error: any) {
       // Expected, handled path (e.g. provider rate-limit) — surfaced in the UI
       // via PipelineErrorAlert, so log as a warning, not an error.
@@ -811,6 +838,7 @@ export default function App() {
             }
           } catch (e) {}
         }
+        displayText = displayText.replace(/\[MEMORY_NOTE:[^\]]*\]/g, "");
 
         setAgentStates((prev) => ({
           ...prev,
@@ -818,12 +846,16 @@ export default function App() {
         }));
       }
 
+      const finalOutput = cleanAgentOutput(stepAccumulator);
       setAgentStates((prev) => ({
         ...prev,
-        [sNum]: { status: "done", output: stepAccumulator },
+        [sNum]: { status: "done", output: finalOutput },
       }));
+      if (!ranInDemo && engine && engine.provider !== "mock" && finalOutput) {
+        setHasLiveSuccess(true);
+      }
 
-      return stepAccumulator;
+      return finalOutput;
     };
 
     try {
@@ -835,7 +867,7 @@ export default function App() {
 
       const draftId = activeReviewId || `draft-${Date.now()}`;
       if (!activeReviewId) setActiveReviewId(draftId);
-      triggerNotificationFlow(category, situation, runOutputs.step5, draftId, runOutputs);
+      await triggerNotificationFlow(category, situation, runOutputs.step5, draftId, runOutputs);
     } catch (e: any) {
       console.error(e);
       setIsPipelineRunning(false);
@@ -1075,8 +1107,13 @@ export default function App() {
     if (optionMatch) {
       return optionMatch[1].trim();
     }
-    // Fallback to first non-empty line under Step 5 heading
-    return "Vulnerability-Weighted Allocation Plan Proposal";
+    // Honest fallback: derive from the brief's first substantive line — never a
+    // hardcoded literal (that would fabricate a recommendation the AI never made).
+    const firstLine = text
+      .split("\n")
+      .map((l) => l.replace(/^[#>*\-\s]+/, "").trim())
+      .find((l) => l.length > 8);
+    return firstLine || "";
   };
 
   /**
@@ -1202,12 +1239,14 @@ export default function App() {
                 {engine.provider} · {engine.model}
               </span>
               <RealityPill
-                kind={engine.search ? "live" : "mock"}
-                pulse={engine.search}
+                kind={engine.provider === "mock" ? "mock" : hasLiveSuccess ? "live" : "ready"}
+                pulse={hasLiveSuccess}
                 title={
-                  engine.search
-                    ? "Connected to a live model (Gemini adds live Google Search grounding; other providers reason over labeled benchmarks)"
-                    : "Offline demo mock — no API key configured"
+                  engine.provider === "mock"
+                    ? "Offline demo mock — no API key configured"
+                    : hasLiveSuccess
+                    ? "A live model response has streamed this session (Gemini adds Google Search grounding; other providers reason over labeled benchmarks)"
+                    : "A live model is configured but no live run has completed yet — runs may fall back to a clearly labeled demo"
                 }
               />
             </span>
@@ -1479,9 +1518,15 @@ export default function App() {
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted">
                               {engine.provider} · {engine.model}
                               <RealityPill
-                                kind={engine.search ? "live" : "mock"}
-                                pulse={engine.search}
-                                title={engine.search ? "Live model" : "Offline demo mock"}
+                                kind={engine.provider === "mock" ? "mock" : hasLiveSuccess ? "live" : "ready"}
+                                pulse={hasLiveSuccess}
+                                title={
+                                  engine.provider === "mock"
+                                    ? "Offline demo mock"
+                                    : hasLiveSuccess
+                                    ? "A live model response has streamed this session"
+                                    : "Live model configured; no live run completed yet"
+                                }
                               />
                             </span>
                           ) : (
@@ -1494,16 +1539,21 @@ export default function App() {
                             <span className="w-4 shrink-0">#</span>
                             <span className="flex-1 min-w-0">Agent</span>
                             <span className="hidden sm:block w-[96px] shrink-0">Model</span>
-                            <span className="w-12 shrink-0 text-center">Valid.</span>
+                            <span
+                              className="w-12 shrink-0 text-center"
+                              title="Output returned (non-empty, telemetry-stripped). Not a correctness guarantee — CIVICTAS does not auto-validate agent reasoning."
+                            >
+                              Output
+                            </span>
                             <span className="w-10 shrink-0 text-center">Src</span>
                             <span className="w-16 shrink-0 text-right">Status</span>
                           </div>
                           {([1, 2, 3, 4, 5] as const).map((n) => {
                             const stt = agentStates[n].status;
                             const out = agentStates[n].output.trim();
-                            const val = stt === "done" && out ? "pass" : stt === "error" ? "fail" : "—";
+                            const val = stt === "done" && out ? "ok" : stt === "error" ? "fail" : "—";
                             const valCls =
-                              val === "pass" ? "text-positive" : val === "fail" ? "text-danger" : "text-faint";
+                              val === "ok" ? "text-positive" : val === "fail" ? "text-danger" : "text-faint";
                             const statusCls =
                               stt === "done"
                                 ? "text-positive"

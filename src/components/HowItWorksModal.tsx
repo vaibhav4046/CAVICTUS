@@ -76,7 +76,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
           <button
             id="close-modal-btn"
             onClick={onClose}
-            className="p-1 px-1.5 rounded-lg border border-border-line bg-surface-solid hover:bg-surface text-muted hover:text-ink transition-colors"
+            className="min-h-9 min-w-9 grid place-items-center rounded-lg border border-border-line bg-surface-solid hover:bg-surface text-muted hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />

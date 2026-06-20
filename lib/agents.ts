@@ -181,7 +181,7 @@ The core details:
 
 Your job is to project the outcomes of EACH candidate option (detailed in the decision framing above) across three horizons: Now, 1 Year, and 5 Years.
 You must project each option based on THREE decision-relevant metrics (e.g., Financial Cost/Budget, People Sheltered/Served, Heat Index Reduction, Equity Coverage, etc.).
-Produce this as a clean, compliant Markdown table. Every single cell in the table MUST contain a specific number with appropriate units (e.g. "$120,000", "450 residents", "88% coverage"). NO blanks, no "varies", no estimated ranges like "50-100" in cells.
+Produce this as a clean, compliant Markdown table. Ground every projection in the Agent 2 evidence above. Where the evidence supports a point estimate, give a specific number with units (e.g. "$120,000", "450 residents", "88% coverage"). Where it does not, give an honest range (e.g. "300-500 residents") or write "insufficient data" rather than inventing false precision. Note the basis or assumption for any number that is not directly evidenced in the Assumptions section below. Do not fabricate precision you cannot justify.
 
 Use the following headings exactly in Markdown:
 

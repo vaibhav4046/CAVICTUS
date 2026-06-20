@@ -685,7 +685,7 @@ Archived using CIVICTAS Workspace Connector.
           <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${!token ? "opacity-45 pointer-events-none select-none select-text filter grayscale-[40%]" : ""}`}>
             
             {/* 1. GMAIL */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-gmail-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-gmail-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-agent-framing" />
@@ -734,7 +734,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerGmailSend}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Send Brief via Gmail
                 </button>
@@ -754,7 +754,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 2. GOOGLE SHEETS */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-sheets-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-sheets-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Database className="w-4 h-4 text-agent-evidence" />
@@ -785,7 +785,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerSheetsExport}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Generate Spreadsheet
                 </button>
@@ -815,7 +815,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 3. CALENDAR & MEET */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-calendar-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-calendar-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-agent-simulation" />
@@ -889,7 +889,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerCalendarCreate}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Schedule in Calendar
                 </button>
@@ -919,7 +919,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 4. GOOGLE DRIVE */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-drive-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-drive-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-agent-equity" />
@@ -949,7 +949,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerDriveUpload}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Upload Dossier to Drive
                 </button>
@@ -979,7 +979,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 5. GOOGLE TASKS */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-tasks-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-tasks-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <CheckSquare className="w-4 h-4 text-agent-transparency" />
@@ -1016,7 +1016,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerTaskSync}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Sync Task to Todo-list
                 </button>
@@ -1036,7 +1036,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 6. GOOGLE CHAT */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-chat-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2" id="gsuite-chat-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-accent" />
@@ -1074,7 +1074,7 @@ Archived using CIVICTAS Workspace Connector.
                 <button
                   type="button"
                   onClick={triggerChatPost}
-                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-white font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
+                  className="w-full py-2.5 bg-gradient-to-r from-accent to-accent-2 hover:opacity-95 text-on-accent font-bold text-xs rounded-xl cursor-pointer transition-all uppercase tracking-wide"
                 >
                   Send Announcement Message
                 </button>
