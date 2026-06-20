@@ -26,6 +26,7 @@ import {
 } from "../utils/workspace";
 import BrandMark from "./BrandMark";
 import RealityPill from "./RealityPill";
+import { useConfirm, useNotify } from "../dialog";
 
 interface WorkspacePanelProps {
   category: string;
@@ -47,6 +48,8 @@ interface WorkspacePanelProps {
 }
 
 export default function WorkspacePanel(props: WorkspacePanelProps) {
+  const confirm = useConfirm();
+  const notify = useNotify();
   const [token, setToken] = useState<string | null>(null);
   const [isSandboxMode, setIsSandboxMode] = useState(true);
   const [clientId, setClientId] = useState(() => {
@@ -191,7 +194,7 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
   // Launch standard OAuth explicit flow with custom client id
   const handleLaunchGoogleOAuth = () => {
     if (!clientId.trim()) {
-      alert("Please configure a valid Google Client ID first before logging in.");
+      notify({ tone: "warning", message: "Configure a valid Google Client ID first before connecting." });
       return;
     }
 
@@ -213,7 +216,7 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
     
     const popup = window.open(url, "civictas_google_oauth_popup", "width=600,height=700,status=no,resizable=yes");
     if (!popup) {
-      alert("Popup blocked! Please allow popups for CIVICTAS to enable authorization.");
+      notify({ tone: "error", message: "Popup blocked. Allow popups for CIVICTAS to enable authorization." });
     }
   };
 
@@ -237,7 +240,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
       setEmailStatus({ type: "error", msg: "Please specify a recipient email address." });
       return;
     }
-    const confirmed = window.confirm(`Send decision proposal brief to '${emailTo}' via your Gmail account?`);
+    const confirmed = await confirm({
+      title: "Send proposal brief?",
+      body: `This sends the decision proposal brief to ${emailTo} via your connected Gmail account.`,
+      confirmLabel: "Send email",
+    });
     if (!confirmed) return;
 
     setEmailStatus({ type: "loading", msg: "Sending email..." });
@@ -252,7 +259,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
   // 2. Sheets export
   const triggerSheetsExport = async () => {
     if (!token) return;
-    const confirmed = window.confirm("Export Agent 3 comparison outcomes to a new Google Sheets workbook?");
+    const confirmed = await confirm({
+      title: "Export to Google Sheets?",
+      body: "This creates a new Google Sheets workbook with the Agent 3 comparison outcomes.",
+      confirmLabel: "Export",
+    });
     if (!confirmed) return;
 
     setSheetStatus({ type: "loading", msg: "Creating and writing Sheet data..." });
@@ -301,7 +312,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
       setCalStatus({ type: "error", msg: "Please enter event start and end times." });
       return;
     }
-    const confirmed = window.confirm("Add proposed review meeting to your Google Calendar?");
+    const confirmed = await confirm({
+      title: "Add to Google Calendar?",
+      body: "This creates the proposed review meeting on your Google Calendar.",
+      confirmLabel: "Add event",
+    });
     if (!confirmed) return;
 
     setCalStatus({ type: "loading", msg: "Creating calendar invite & Meet link..." });
@@ -323,7 +338,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
   // 4. Secure Document Archival (Drive)
   const triggerDriveUpload = async () => {
     if (!token) return;
-    const confirmed = window.confirm("Archive the entire decision-making record directly as a file in Google Drive?");
+    const confirmed = await confirm({
+      title: "Archive to Google Drive?",
+      body: "This archives the entire decision-making record as a file in your Google Drive.",
+      confirmLabel: "Archive",
+    });
     if (!confirmed) return;
 
     setDriveStatus({ type: "loading", msg: "Generating report and uploading file..." });
@@ -394,7 +413,11 @@ Archived using CIVICTAS Workspace Connector.
       setTaskStatus({ type: "error", msg: "Please specify a task Title." });
       return;
     }
-    const confirmed = window.confirm("Sync follow-up check tasks into your default Google Tasks list?");
+    const confirmed = await confirm({
+      title: "Sync to Google Tasks?",
+      body: "This adds the follow-up check tasks to your default Google Tasks list.",
+      confirmLabel: "Sync tasks",
+    });
     if (!confirmed) return;
 
     setTaskStatus({ type: "loading", msg: "Saving task to Google Tasks..." });
@@ -413,7 +436,11 @@ Archived using CIVICTAS Workspace Connector.
       setChatStatus({ type: "error", msg: "Please enter a valid Google Chat Space ID (e.g., spaces/XXXXXXXX)." });
       return;
     }
-    const confirmed = window.confirm("Post proposal summary notification directly to the selected Google Chat Space?");
+    const confirmed = await confirm({
+      title: "Post to Google Chat?",
+      body: "This posts the proposal summary notification to the selected Google Chat space.",
+      confirmLabel: "Post",
+    });
     if (!confirmed) return;
 
     setChatStatus({ type: "loading", msg: "Posting notification..." });
