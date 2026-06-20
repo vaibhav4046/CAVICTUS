@@ -56,6 +56,16 @@ const GROQ_MODEL = cleanKey(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile"
 const OPENROUTER_MODEL = cleanKey(process.env.OPENROUTER_MODEL) || "meta-llama/llama-3.3-70b-instruct";
 const OPENROUTER_BASE_URL = cleanKey(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1";
 
+// Non-streaming completions (the persona council) must finish well inside the
+// serverless function limit, or the platform kills the whole request and the
+// graceful in-code fallback never runs. Cap latency with a token ceiling and an
+// abort timeout below that limit so a slow provider degrades to a labeled mock.
+const COMPLETE_MAX_TOKENS = 1200;
+const COMPLETE_TIMEOUT_MS = 45000;
+// Bound a single streamed agent step so one runaway generation can't exceed the
+// function limit mid-stream and truncate the run.
+const STREAM_MAX_TOKENS = 1800;
+
 export function resolveProvider(): Provider {
   const forced = (process.env.LLM_PROVIDER || "").toLowerCase().trim();
   if (forced === "gemini" || forced === "groq" || forced === "openrouter" || forced === "mock") {
@@ -472,6 +482,7 @@ async function runOpenRouter(step: string, body: AgentBody, cb: StreamCallbacks)
       model: OPENROUTER_MODEL,
       temperature: 0.2,
       stream: true,
+      max_tokens: STREAM_MAX_TOKENS,
       messages: [
         { role: "system", content: systemInstruction },
         { role: "user", content: finalUser },
@@ -523,11 +534,13 @@ export async function complete(system: string, user: string, temperature = 0.3):
       body: JSON.stringify({
         model: GROQ_MODEL,
         temperature,
+        max_tokens: COMPLETE_MAX_TOKENS,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
         ],
       }),
+      signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
     });
     if (!resp.ok) throw new Error(`Groq API error (${resp.status}): ${(await safeText(resp)).slice(0, 200)}`);
     const json: any = await resp.json();
@@ -536,6 +549,9 @@ export async function complete(system: string, user: string, temperature = 0.3):
 
   if (provider === "openrouter") {
     const apiKey = cleanKey(process.env.OPENROUTER_API_KEY);
+    // Hard sub-cap below the serverless function limit: a slow non-streaming
+    // completion aborts here and throws, so callers (e.g. the council) fall back
+    // gracefully instead of the whole function being killed at the platform limit.
     const resp = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
@@ -547,11 +563,13 @@ export async function complete(system: string, user: string, temperature = 0.3):
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
         temperature,
+        max_tokens: COMPLETE_MAX_TOKENS,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
         ],
       }),
+      signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
     });
     if (!resp.ok) throw new Error(`OpenRouter API error (${resp.status}): ${(await safeText(resp)).slice(0, 200)}`);
     const json: any = await resp.json();
