@@ -92,8 +92,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50">
-              <span className="text-xs font-semibold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-mono">
+            <div className="p-4 rounded-xl border border-agent-framing/30 bg-agent-framing/10">
+              <span className="text-xs font-semibold px-2 py-0.5 bg-agent-framing/15 text-agent-framing rounded-full font-mono">
                 AGENT 1
               </span>
               <h3 className="font-semibold text-ink mt-2">Policy Framing</h3>
@@ -102,8 +102,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-teal-100 bg-teal-50/50">
-              <span className="text-xs font-semibold px-2 py-0.5 bg-teal-100 text-teal-800 rounded-full font-mono">
+            <div className="p-4 rounded-xl border border-agent-evidence/30 bg-agent-evidence/10">
+              <span className="text-xs font-semibold px-2 py-0.5 bg-agent-evidence/15 text-agent-evidence rounded-full font-mono">
                 AGENT 2
               </span>
               <h3 className="font-semibold text-ink mt-2">Search Grounding</h3>
@@ -112,8 +112,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-indigo-100 bg-indigo-50/50">
-              <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full font-mono">
+            <div className="p-4 rounded-xl border border-agent-simulation/30 bg-agent-simulation/10">
+              <span className="text-xs font-semibold px-2 py-0.5 bg-agent-simulation/15 text-agent-simulation rounded-full font-mono">
                 AGENT 3
               </span>
               <h3 className="font-semibold text-ink mt-2">Multi-Metric Simulation</h3>
@@ -122,12 +122,12 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-amber-100 bg-amber-50/45">
-              <span className="text-xs font-semibold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-mono">
+            <div className="p-4 rounded-xl border border-agent-equity/30 bg-agent-equity/10">
+              <span className="text-xs font-semibold px-2 py-0.5 bg-agent-equity/15 text-agent-equity rounded-full font-mono">
                 AGENT 4
               </span>
-              <h3 className="font-semibold mt-2 flex items-center gap-1.5 text-amber-900">
-                <ShieldAlert className="w-4 h-4 text-amber-600" /> Equity & Risk Audit
+              <h3 className="font-semibold mt-2 flex items-center gap-1.5 text-ink">
+                <ShieldAlert className="w-4 h-4 text-agent-equity" /> Equity & Risk Audit
               </h3>
               <p className="text-xs text-muted mt-1">
                 Directly exposes demographic blind spots, highlights data underrepresentation risks, and demands specific on-the-ground human verification.
@@ -135,8 +135,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50">
-            <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-mono">
+          <div className="p-4 rounded-xl border border-agent-transparency/30 bg-agent-transparency/10">
+            <span className="text-xs font-semibold px-2 py-0.5 bg-agent-transparency/15 text-agent-transparency rounded-full font-mono">
               AGENT 5 & 6
             </span>
             <h3 className="font-semibold text-ink mt-2">Briefing & Human-in-the-Loop Override</h3>
