@@ -24,6 +24,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         situation: b.situation || "",
         equityGoal: b.equityGoal || "",
         recommendation: b.recommendation || "",
+        evidence: b.evidence || "",
+        projections: b.projections || "",
+        audit: b.audit || "",
       },
       { forceProvider: b.demo ? "mock" : undefined }
     );

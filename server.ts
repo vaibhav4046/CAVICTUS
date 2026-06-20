@@ -42,6 +42,9 @@ async function startServer() {
           situation: b.situation || "",
           equityGoal: b.equityGoal || "",
           recommendation: b.recommendation || "",
+          evidence: b.evidence || "",
+          projections: b.projections || "",
+          audit: b.audit || "",
         },
         { forceProvider: b.demo ? "mock" : undefined }
       );
