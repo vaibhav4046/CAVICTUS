@@ -882,7 +882,9 @@ export default function App() {
       if (!activeReviewId) setActiveReviewId(draftId);
       await triggerNotificationFlow(category, situation, runOutputs.step5, draftId, runOutputs);
     } catch (e: any) {
-      console.error(e);
+      // Handled + surfaced to the user via PipelineErrorAlert (with retry + demo
+      // fallback), so log as a warning, not an error — keeps the console clean.
+      console.warn("Retry step failed (surfaced to user):", e);
       setIsPipelineRunning(false);
       setAgentStates((prev) => {
         const updated = { ...prev };
