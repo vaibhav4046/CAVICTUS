@@ -23,6 +23,8 @@ import { downloadDecisionBrief, downloadTextBrief, getConfidencePill, describePi
 import { decodeRecord, encodeRecord, buildShareUrl, RECORD_PARAM, DecisionSource } from "./share";
 import { useConfirm, useNotify } from "./dialog";
 import { validateStep, extractRecommendedOption, recommendationIsFramed } from "../lib/extract";
+import PublicDecisionRecord from "./components/PublicDecisionRecord";
+import { buildDecisionRecordV2, type DecisionRecordV2 } from "../lib/decisionRecordV2";
 
 // Friendly labels for the five advisory agents, used when surfacing a failure.
 const AGENT_LABELS: Record<number, string> = {
@@ -199,6 +201,8 @@ export default function App() {
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [isPipelineDone, setIsPipelineDone] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false);
+  const [finalizedRecord, setFinalizedRecord] = useState<DecisionRecordV2 | null>(null);
+  const [councilResult, setCouncilResult] = useState<{ total: number; approve: number; approveWithEdits: number; reject: number; aggregateScore: number; model: string; topRisk?: string; consensus?: string; dissents?: { persona: string; verdict: string; reason: string }[] } | null>(null);
   // Honest failure surface: set when an agent step throws so the UI shows the
   // real reason instead of silently reverting to the setup form.
   const [pipelineError, setPipelineError] = useState<PipelineFailure | null>(null);
@@ -539,6 +543,8 @@ export default function App() {
     setPipelineError(null);
     setRanInDemo(demo);
     setHasLiveSuccess(false);
+    setFinalizedRecord(null);
+    setCouncilResult(null);
     setGroundingSources([]);
     setChannels([]);
     setDataset(ds || "");
@@ -912,6 +918,8 @@ export default function App() {
     decisionType: HumanDecisionType;
     chosenOption: string;
     humanRationale: string;
+    dissentConsidered: string;
+    monitoringAction: string;
     checks: {
       dataGaps: boolean;
       equity: boolean;
@@ -923,6 +931,40 @@ export default function App() {
     setHumanRationale(details.humanRationale);
     setChecks(details.checks);
     setIsFinalized(true);
+
+    // Build the civic accountability artifact (Public Decision Record) from the
+    // real run state — evidence grade, dissent, equity, human gate, limitations.
+    const recId = `cvtas-${Date.now().toString(36)}`;
+    setFinalizedRecord(
+      buildDecisionRecordV2({
+        mode: ranInDemo ? "demo" : "live",
+        category,
+        situation,
+        budget,
+        sites,
+        equityGoal,
+        engine,
+        agentOutputs: {
+          step1: agentStates[1].output,
+          step2: agentStates[2].output,
+          step3: agentStates[3].output,
+          step4: agentStates[4].output,
+          step5: agentStates[5].output,
+        },
+        groundingSources,
+        council: councilResult,
+        human: {
+          reviewerName: reviewers[selectedReviewerIndex]?.name || reviewers[0]?.name,
+          decision: details.decisionType,
+          rationale: details.humanRationale,
+          dissentConsidered: details.dissentConsidered,
+          monitoringAction: details.monitoringAction,
+          checks: details.checks,
+        },
+        recordId: recId,
+        createdAt: new Date().toISOString(),
+      })
+    );
 
     const memoryItem: DecisionMemoryItem = {
       id: `saved-${Date.now()}`,
@@ -1478,6 +1520,7 @@ export default function App() {
                   audit={agentStates[4].output}
                   channels={channels}
                   demo={ranInDemo}
+                  onResult={setCouncilResult}
                 />
               </section>
             )}
@@ -1505,6 +1548,11 @@ export default function App() {
                   onDeleteReviewer={handleDeleteReviewer}
                   notificationStatus={notificationStatus}
                 />
+
+                {/* The civic accountability artifact — appears once a human finalizes. */}
+                {isFinalized && finalizedRecord && (
+                  <PublicDecisionRecord record={finalizedRecord} />
+                )}
               </section>
             )}
 

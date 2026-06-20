@@ -49,6 +49,8 @@ interface CouncilPanelProps {
   channels: ChannelStatus[];
   /** When true, the council runs in deterministic demo mode (forced mock). */
   demo?: boolean;
+  /** Lift the council result so the Public Decision Record can include dissent. */
+  onResult?: (r: CouncilResult) => void;
 }
 
 const verdictChip = (v: string): string => {
@@ -87,8 +89,10 @@ export default function CouncilPanel(props: CouncilPanelProps) {
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data && typeof data.total === "number") setResult(data);
-        else setError(data?.error || "Council unavailable.");
+        if (data && typeof data.total === "number") {
+          setResult(data);
+          props.onResult?.(data);
+        } else setError(data?.error || "Council unavailable.");
       })
       .catch(() => setError("Council request failed."))
       .finally(() => setLoading(false));

@@ -40,16 +40,16 @@ export default function Landing({ onEnter, onTour, engine }: LandingProps) {
             Community Decision Copilot
           </span>
 
-          <h1 className="font-display font-semibold tracking-tight text-ink leading-[1.05] text-5xl md:text-6xl">
-            AI advises.
+          <h1 className="font-display font-semibold tracking-tight text-ink leading-[1.05] text-4xl md:text-6xl">
+            AI advises. Humans decide.
             <br />
-            <span className="text-accent">You decide.</span>
+            <span className="text-accent">CIVICTAS records the proof.</span>
           </h1>
 
           <p className="mt-6 text-base md:text-lg text-muted leading-relaxed max-w-xl">
-            CIVICTAS turns a hard community resource decision — where to place cooling centers,
-            shelters, clinics — into a transparent, equity-first recommendation. The AI does the
-            homework. A human makes the call.
+            Run a live five-agent civic review, surface evidence gaps and dissent, lock approval behind
+            human accountability checks, and export a <strong className="text-ink">Public Decision
+            Record</strong> a city, journalist, or resident can inspect.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 text-xs font-semibold">
@@ -61,6 +61,9 @@ export default function Landing({ onEnter, onTour, engine }: LandingProps) {
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-line px-3 py-1.5 text-ink">
               <span className="w-1.5 h-1.5 rounded-full bg-warning" aria-hidden="true" /> approval locked until rationale + 3 checks
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-line px-3 py-1.5 text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-2" aria-hidden="true" /> exports a Public Decision Record
             </span>
           </div>
 

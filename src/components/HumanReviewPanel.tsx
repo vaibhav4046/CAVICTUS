@@ -27,6 +27,8 @@ interface HumanReviewPanelProps {
     decisionType: HumanDecisionType;
     chosenOption: string;
     humanRationale: string;
+    dissentConsidered: string;
+    monitoringAction: string;
     checks: {
       dataGaps: boolean;
       equity: boolean;
@@ -82,6 +84,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   // "Demonstrably reasoned" — the official must engage a specific data gap or
   // dissenting voice, not merely tick boxes (guards against rubber-stamp oversight).
   const [reasonedNote, setReasonedNote] = useState("");
+  const [monitoringAction, setMonitoringAction] = useState("");
 
   // Share-record feedback (copied / trimmed-to-fit / PDF fallback / manual copy).
   const [shareMsg, setShareMsg] = useState<{ tone: "ok" | "info"; text: string } | null>(null);
@@ -141,6 +144,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
     // Demonstrably-reasoned floor: a substantive note (not a 1-word rubber stamp)
     // naming a specific data gap, dissenting voice, or equity risk weighed.
     reasonedNote.trim().length >= 40 &&
+    monitoringAction.trim().length >= 8 &&
     checkDataGaps &&
     checkEquity &&
     checkCommunity;
@@ -152,6 +156,8 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
       decisionType: decisionType as HumanDecisionType,
       chosenOption,
       humanRationale: `${humanRationale}\n\nReasoned engagement (data gap / dissenting voice weighed): ${reasonedNote.trim()}`,
+      dissentConsidered: reasonedNote.trim(),
+      monitoringAction: monitoringAction.trim(),
       checks: {
         dataGaps: checkDataGaps,
         equity: checkEquity,
@@ -345,6 +351,25 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
               />
               <p className="text-xs text-muted leading-relaxed">
                 Required so oversight is <strong className="text-ink">meaningful, not a rubber-stamp</strong> (Green, 2022). Finalize stays locked until you engage a specific gap or dissent.
+              </p>
+            </div>
+
+            {/* Monitoring commitment — accountability continues after approval */}
+            <div className="space-y-1.5">
+              <label htmlFor="monitoring-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
+                What should be monitored next <span className="text-danger font-bold">*</span>
+              </label>
+              <input
+                id="monitoring-input"
+                type="text"
+                disabled={props.isFinalized}
+                value={monitoringAction}
+                onChange={(e) => setMonitoringAction(e.target.value)}
+                placeholder="e.g. door-to-door verification in the two highest-index tracts within 2 weeks"
+                className="w-full text-sm border border-border-line p-3.5 rounded-xl text-ink bg-surface-2 placeholder-muted focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none disabled:bg-surface-2 disabled:opacity-60 disabled:cursor-not-allowed leading-relaxed transition-colors"
+              />
+              <p className="text-xs text-muted leading-relaxed">
+                One concrete follow-up the office commits to. It is written into the Public Decision Record.
               </p>
             </div>
 
