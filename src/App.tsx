@@ -31,6 +31,16 @@ const AGENT_LABELS: Record<number, string> = {
   5: "Agent 5 — Plan brief",
 };
 
+/** Decision-maker preferences captured at onboarding (best-effort, optional). */
+function readPreferences(): string {
+  if (typeof localStorage === "undefined") return "";
+  try {
+    return localStorage.getItem("civictas_prefs") || "";
+  } catch {
+    return "";
+  }
+}
+
 export default function App() {
   const [memoryItems, setMemoryItems] = useState<DecisionMemoryItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -553,6 +563,7 @@ export default function App() {
           memoryContext: memoryPromptContext,
           dataset: ds || "",
           demo,
+          preferences: readPreferences(),
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,
@@ -751,7 +762,7 @@ export default function App() {
           memoryContext: memoryPromptContext,
           dataset,
           demo: ranInDemo,
-          preferences: typeof localStorage !== "undefined" ? localStorage.getItem("civictas_prefs") || "" : "",
+          preferences: readPreferences(),
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,
