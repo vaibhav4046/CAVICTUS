@@ -17,11 +17,12 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
     const hash = window.location.hash;
     const query = window.location.search;
     let token = null;
-    if (hash) { token = new URLSearchParams(hash.substring(1)).get('access_token'); }
-    if (!token && query) { token = new URLSearchParams(query).get('access_token'); }
+    let state = null;
+    if (hash) { const p = new URLSearchParams(hash.substring(1)); token = p.get('access_token'); state = p.get('state'); }
+    if (query) { const p = new URLSearchParams(query); if (!token) token = p.get('access_token'); if (!state) state = p.get('state'); }
     if (token) {
       if (window.opener) {
-        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token }, window.location.origin);
+        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token, state: state }, window.location.origin);
         setTimeout(() => window.close(), 800);
       } else {
         document.body.innerHTML = '<h2>Authenticated!</h2><p>Please return to the main tab.</p>';

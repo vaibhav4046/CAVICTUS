@@ -146,19 +146,22 @@ async function startServer() {
     const query = window.location.search;
 
     let token = null;
+    let state = null;
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
       token = params.get('access_token');
+      state = params.get('state');
     }
 
-    if (!token && query) {
+    if (query) {
       const params = new URLSearchParams(query);
-      token = params.get('access_token');
+      if (!token) token = params.get('access_token');
+      if (!state) state = params.get('state');
     }
 
     if (token) {
       if (window.opener) {
-        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token }, window.location.origin);
+        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token, state: state }, window.location.origin);
         setTimeout(() => {
           window.close();
         }, 800);

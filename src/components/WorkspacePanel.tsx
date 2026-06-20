@@ -56,7 +56,13 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
     return localStorage.getItem("civitas_gwork_client_id") || "";
   });
   const [sandboxToken, setSandboxToken] = useState(() => {
-    return localStorage.getItem("civitas_gwork_sandbox_token") || "";
+    // Access tokens live in sessionStorage (cleared on tab close), not localStorage,
+    // to shrink the exposure window for a sensitive bearer credential.
+    try {
+      return sessionStorage.getItem("civitas_gwork_sandbox_token") || "";
+    } catch {
+      return "";
+    }
   });
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -116,7 +122,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
   }, [clientId]);
 
   useEffect(() => {
-    localStorage.setItem("civitas_gwork_sandbox_token", sandboxToken);
+    try {
+      sessionStorage.setItem("civitas_gwork_sandbox_token", sandboxToken);
+    } catch {
+      /* storage may be unavailable; token still lives in component state */
+    }
     if (isSandboxMode && sandboxToken.trim()) {
       setToken(sandboxToken.trim());
     }
@@ -133,6 +143,26 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data?.token) {
+        // CSRF guard: the callback must echo the state we generated for this flow.
+        // Only enforce when we actually have a stored state (graceful otherwise).
+        let expected: string | null = null;
+        try {
+          expected = sessionStorage.getItem('civitas_oauth_state');
+        } catch {
+          /* ignore */
+        }
+        if (expected && event.data.state !== expected) {
+          notify({
+            tone: 'error',
+            message: 'Authorization was rejected (state mismatch). Please try connecting again.',
+          });
+          return;
+        }
+        try {
+          sessionStorage.removeItem('civitas_oauth_state');
+        } catch {
+          /* ignore */
+        }
         setToken(event.data.token);
         if (isSandboxMode) {
           setSandboxToken(event.data.token);
@@ -141,7 +171,7 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [isSandboxMode]);
+  }, [isSandboxMode, notify]);
 
   // Pre-populate fields when outputs or inputs change
   useEffect(() => {
@@ -212,7 +242,18 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
       "https://www.googleapis.com/auth/tasks"
     ].join(" ");
 
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId.trim())}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scopes)}&prompt=consent`;
+    // CSRF protection (RFC 6749 §10.12): bind this request to its callback with an
+    // unguessable state value the callback must echo back before we accept a token.
+    const state =
+      (typeof crypto !== "undefined" && crypto.randomUUID?.()) ||
+      `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      sessionStorage.setItem("civitas_oauth_state", state);
+    } catch {
+      /* ignore — verification is best-effort when storage is unavailable */
+    }
+
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId.trim())}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scopes)}&prompt=consent&state=${encodeURIComponent(state)}`;
     
     const popup = window.open(url, "civictas_google_oauth_popup", "width=600,height=700,status=no,resizable=yes");
     if (!popup) {
@@ -224,7 +265,7 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
     setToken(null);
     // Clear the persisted token on disconnect so it can't linger in storage.
     try {
-      localStorage.removeItem("civitas_gwork_sandbox_token");
+      sessionStorage.removeItem("civitas_gwork_sandbox_token");
     } catch {
       /* ignore */
     }
