@@ -646,7 +646,9 @@ export default function App() {
       setActiveReviewId(draftId);
       triggerNotificationFlow(cat, sit, runOutputs.step5, draftId, runOutputs);
     } catch (error: any) {
-      console.error("Workflow interruption:", error);
+      // Expected, handled path (e.g. provider rate-limit) — surfaced in the UI
+      // via PipelineErrorAlert, so log as a warning, not an error.
+      console.warn("Pipeline step failed (surfaced to user):", error);
       setIsPipelineRunning(false);
       // Land the in-flight agent in "error" status so its card stays visible.
       setAgentStates((prev) => {
@@ -748,6 +750,8 @@ export default function App() {
           equityGoal,
           memoryContext: memoryPromptContext,
           dataset,
+          demo: ranInDemo,
+          preferences: typeof localStorage !== "undefined" ? localStorage.getItem("civictas_prefs") || "" : "",
           previousOutputs: {
             step1: currentOutputs.step1,
             step2: currentOutputs.step2,
@@ -891,6 +895,7 @@ export default function App() {
     setIsPipelineDone(false);
     setIsFinalized(false);
     setPipelineError(null);
+    setRanInDemo(false);
     setGroundingSources([]);
     setHumanDecisionType("");
     setChosenOption("");
@@ -922,6 +927,7 @@ export default function App() {
   const handleSelectItem = (id: string) => {
     setSelectedItemId(id);
     setPipelineError(null);
+    setRanInDemo(false);
     const item = memoryItems.find((p) => p.id === id);
     if (!item) return;
 
@@ -976,6 +982,7 @@ export default function App() {
     setIsPipelineDone(false);
     setIsFinalized(false);
     setPipelineError(null);
+    setRanInDemo(false);
     setSelectedItemId(null);
     setHumanDecisionType("");
     setChosenOption("");
@@ -1437,7 +1444,12 @@ export default function App() {
                             <Activity className="w-3.5 h-3.5" aria-hidden="true" />
                             Harness trace
                           </h3>
-                          {engine ? (
+                          {ranInDemo ? (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted">
+                              demo · demo-mock
+                              <RealityPill kind="mock" title="Deterministic demo outputs (canned), not live AI" />
+                            </span>
+                          ) : engine ? (
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted">
                               {engine.provider} · {engine.model}
                               <RealityPill
@@ -1485,7 +1497,7 @@ export default function App() {
                                   {["Framing", "Evidence", "Simulation", "Equity & risk", "Brief"][n - 1]}
                                 </span>
                                 <span className="hidden sm:block w-[96px] shrink-0 font-mono text-muted truncate">
-                                  {engine?.model ?? "—"}
+                                  {ranInDemo ? "demo-mock" : (engine?.model ?? "—")}
                                 </span>
                                 <span className={`w-12 shrink-0 text-center font-mono ${valCls}`}>{val}</span>
                                 <span className="w-10 shrink-0 text-center font-mono text-muted">{src}</span>

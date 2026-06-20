@@ -25,6 +25,8 @@ export interface AgentBody {
   equityGoal?: string;
   memoryContext?: string;
   dataset?: string;
+  /** Free-text decision-maker profile/preferences captured at onboarding. */
+  preferences?: string;
   previousOutputs?: {
     step1?: string;
     step2?: string;
@@ -78,6 +80,7 @@ export function buildAgentMessages(step: string, body: AgentBody): AgentMessages
     sites,
     equityGoal,
     memoryContext,
+    preferences,
     previousOutputs,
   } = body;
 
@@ -266,6 +269,15 @@ Treat this as the most authoritative source. Ground every number in it, referenc
 \`\`\`
 ${body.dataset.slice(0, 4000)}
 \`\`\``;
+  }
+
+  // Personalization: prepend the decision-maker's stated preferences so every
+  // agent tailors framing/evidence/brief to their role + priorities.
+  const prefs = (preferences || "").trim();
+  if (prefs) {
+    userPrompt =
+      `# Decision-maker preferences (weight your output to these; never let them override equity or honesty)\n${prefs.slice(0, 600)}\n\n` +
+      userPrompt;
   }
 
   return { systemInstruction, userPrompt, useGrounding };

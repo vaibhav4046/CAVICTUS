@@ -70,6 +70,7 @@ async function startServer() {
       equityGoal: req.body.equityGoal,
       memoryContext: req.body.memoryContext,
       dataset: req.body.dataset,
+      preferences: req.body.preferences,
       previousOutputs: req.body.previousOutputs,
     };
 
