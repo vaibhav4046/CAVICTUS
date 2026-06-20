@@ -151,7 +151,7 @@ export default function Sidebar(props: SidebarProps) {
                     }`}
                     role="button"
                     tabIndex={0}
-                    aria-pressed={isSelected}
+                    aria-current={isSelected ? "true" : undefined}
                   >
                     <div className="flex items-start gap-2.5">
                       {isApproved ? (
