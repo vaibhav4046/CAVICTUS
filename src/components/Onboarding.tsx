@@ -79,7 +79,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           <div className="w-14 h-14 rounded-2xl bg-accent-soft text-accent flex items-center justify-center mx-auto mb-6">
             <Icon className="w-6 h-6" aria-hidden="true" />
           </div>
-          <span className="text-[11px] font-mono text-muted">
+          <span className="text-[11px] font-mono text-muted" role="status" aria-live="polite" aria-atomic="true">
             Step {i + 1} of {total}
           </span>
 
@@ -112,7 +112,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             </>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 mt-7">
+          <div className="flex items-center justify-center gap-1.5 mt-7" aria-hidden="true">
             {Array.from({ length: total }).map((_, idx) => (
               <span
                 key={idx}

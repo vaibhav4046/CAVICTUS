@@ -37,19 +37,35 @@ export default function Select({
   const [active, setActive] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
 
   const selected = options.find((o) => o.value === value) ?? options[0];
 
-  // Close on outside click.
+  const close = (focusButton = false) => {
+    setOpen(false);
+    if (focusButton) btnRef.current?.focus();
+  };
+
+  // Close on outside pointer (mouse + touch).
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: Event) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
   }, [open]);
+
+  // Keep the keyboard-active option scrolled into view.
+  useEffect(() => {
+    if (!open) return;
+    listRef.current?.querySelector<HTMLElement>(`[data-idx="${active}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [active, open]);
 
   // When opening, point the active row at the current value.
   const openMenu = () => {
@@ -61,7 +77,7 @@ export default function Select({
 
   const choose = (v: string) => {
     onChange(v);
-    setOpen(false);
+    close(true);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -73,9 +89,13 @@ export default function Select({
       }
       return;
     }
+    if (e.key === "Tab") {
+      setOpen(false); // close, let focus move on (APG listbox pattern)
+      return;
+    }
     if (e.key === "Escape") {
       e.preventDefault();
-      setOpen(false);
+      close(true);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       setActive((a) => Math.min(a + 1, options.length - 1));
@@ -90,7 +110,8 @@ export default function Select({
       setActive(options.length - 1);
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      choose(options[active].value);
+      const opt = options[active];
+      if (opt) choose(opt.value);
     }
   };
 
@@ -99,11 +120,14 @@ export default function Select({
       <button
         type="button"
         id={id}
+        ref={btnRef}
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={open ? `${listId}-opt-${active}` : undefined}
         aria-labelledby={ariaLabelledby}
         className="w-full flex items-center justify-between gap-2 text-sm font-medium text-ink bg-surface-2 border border-border-line rounded-xl px-3.5 py-2.5 text-left cursor-pointer transition-colors hover:border-border-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
       >
@@ -129,6 +153,8 @@ export default function Select({
             return (
               <li
                 key={opt.value}
+                id={`${listId}-opt-${i}`}
+                data-idx={i}
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => choose(opt.value)}
