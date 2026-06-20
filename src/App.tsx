@@ -22,6 +22,7 @@ import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType 
 import { downloadDecisionBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
 import { decodeRecord, encodeRecord, buildShareUrl, RECORD_PARAM, DecisionSource } from "./share";
 import { useConfirm, useNotify } from "./dialog";
+import { validateStep, extractRecommendedOption, recommendationIsFramed } from "../lib/extract";
 
 // Friendly labels for the five advisory agents, used when surfacing a failure.
 const AGENT_LABELS: Record<number, string> = {
@@ -1098,28 +1099,9 @@ export default function App() {
     });
   };
 
-  // Extract recommended choice headline from Agent 5 text
-  const extractRecommendationValue = () => {
-    const text = agentStates[5].output;
-    if (!text) return "";
-    const lines = text.split("\n");
-    // Look for lines that start with bold options or lists containing Candidate labels
-    const match = text.match(/# Recommended option\s+([^\n]+)/i);
-    if (match) {
-      return match[1].trim();
-    }
-    const optionMatch = text.match(/Recommended option \(proposal\)\s+([^\n]+)/i);
-    if (optionMatch) {
-      return optionMatch[1].trim();
-    }
-    // Honest fallback: derive from the brief's first substantive line — never a
-    // hardcoded literal (that would fabricate a recommendation the AI never made).
-    const firstLine = text
-      .split("\n")
-      .map((l) => l.replace(/^[#>*\-\s]+/, "").trim())
-      .find((l) => l.length > 8);
-    return firstLine || "";
-  };
+  // Extract recommended choice headline from Agent 5 text. Single source of truth
+  // in lib/extract (tested), never a hardcoded literal.
+  const extractRecommendationValue = () => extractRecommendedOption(agentStates[5].output);
 
   /**
    * Build a shareable read-only link for the current finalized decision.
@@ -1550,9 +1532,9 @@ export default function App() {
                             <span className="hidden sm:block w-[96px] shrink-0">Model</span>
                             <span
                               className="w-12 shrink-0 text-center"
-                              title="Output returned (non-empty, telemetry-stripped). Not a correctness guarantee — CIVICTAS does not auto-validate agent reasoning."
+                              title="Per-agent structural validation: does each output carry the load-bearing markers its contract requires (options, confidence levels, projection table, recommendation+rating)? A structure check, not a correctness guarantee."
                             >
-                              Output
+                              Struct.
                             </span>
                             <span className="w-10 shrink-0 text-center">Src</span>
                             <span className="w-16 shrink-0 text-right">Status</span>
@@ -1560,9 +1542,23 @@ export default function App() {
                           {([1, 2, 3, 4, 5] as const).map((n) => {
                             const stt = agentStates[n].status;
                             const out = agentStates[n].output.trim();
-                            const val = stt === "done" && out ? "ok" : stt === "error" ? "fail" : "—";
+                            const check = stt === "done" && out ? validateStep(n, out) : null;
+                            const val =
+                              stt === "error" ? "fail" : check ? (check.ok ? "ok" : "partial") : "—";
+                            const valTitle =
+                              check && !check.ok
+                                ? `Structure incomplete — missing: ${check.missing.join(", ")}`
+                                : check
+                                ? "All required structural markers present (structure check, not a correctness guarantee)"
+                                : undefined;
                             const valCls =
-                              val === "ok" ? "text-positive" : val === "fail" ? "text-danger" : "text-faint";
+                              val === "ok"
+                                ? "text-positive"
+                                : val === "fail"
+                                ? "text-danger"
+                                : val === "partial"
+                                ? "text-warning"
+                                : "text-faint";
                             const statusCls =
                               stt === "done"
                                 ? "text-positive"
@@ -1584,7 +1580,7 @@ export default function App() {
                                 <span className="hidden sm:block w-[96px] shrink-0 font-mono text-muted truncate">
                                   {ranInDemo ? "demo-mock" : (engine?.model ?? "—")}
                                 </span>
-                                <span className={`w-12 shrink-0 text-center font-mono ${valCls}`}>{val}</span>
+                                <span className={`w-12 shrink-0 text-center font-mono ${valCls}`} title={valTitle}>{val}</span>
                                 <span className="w-10 shrink-0 text-center font-mono text-muted">{src}</span>
                                 <span className={`w-16 shrink-0 text-right font-mono font-semibold ${statusCls}`}>
                                   {stt}
@@ -1595,9 +1591,26 @@ export default function App() {
                         </div>
 
                         <p className="text-[10px] text-faint mt-2.5 leading-relaxed">
-                          Real run state — validation means the agent returned structured output; sources come
-                          from the Evidence step's grounding. No synthetic latency or token counts.
+                          Real run state — "Struct." structurally validates each agent's output against the
+                          markers its contract requires (options, confidence levels, projection table,
+                          recommendation + rating); sources come from the Evidence step's grounding. No
+                          synthetic latency or token counts.
                         </p>
+                        {(() => {
+                          const framed = recommendationIsFramed(
+                            agentStates[1].output,
+                            agentStates[5].output
+                          );
+                          if (framed === null) return null;
+                          return (
+                            <p
+                              className={`text-[10px] mt-1.5 font-mono ${framed ? "text-positive" : "text-warning"}`}
+                              title="Cross-agent consistency: the recommendation Agent 5 makes should be one of the options Agent 1 framed."
+                            >
+                              Consistency: recommendation {framed ? "traces to a framed option" : "does not match any framed option — review"}.
+                            </p>
+                          );
+                        })()}
                       </div>
 
                       <VoiceAgent proposal={extractRecommendationValue()} />
