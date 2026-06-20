@@ -167,13 +167,24 @@ Proven loop: **audit (workflow) → fix (you, sequential) → tsc+build → brow
     `text-on-accent` + solid surfaces; AWAITING badge sustained-pulse removed;
     modal close >=24px; sidebar `aria-current`; indigo theme-color/favicon +
     twitter:card.
-- **Remaining (deferred, NOT blockers — see re-audit):** mock council dissents are
-  cooling-center-specific, so a non-heat demo scenario shows mismatched (but
-  demo-labeled) council output; WorkspacePanel email-body HTML interpolation
-  (self-targeted, user-editable, low real risk); a few small a11y MEDIUMs (M12
-  deep-link reviewer hardcode, M13 progress-nav todo aria, M14 landing skip-link,
-  M16 returning-visitor landing bypass). Audit scripts:
-  `.../workflows/scripts/civictas-audit-v2-*.js` and `civictas-audit-v3-confirm-*.js`.
+- **All cheap/no-downside MEDIUMs now CLEARED** (M4 retry sources, M5 value stat,
+  M6 landing stage-reveal, M7 chip token, M9 modal target, M11 chrome, M12 deep-link
+  reviewer, M13 progress-nav aria, M14 landing skip-link, M15 aria-current).
+- **Truly remaining (all intentionally deferred, NOT blockers):**
+  - **M2 — structured inter-agent contract (LARGE, the next real substance lever):**
+    each pipeline step still pastes the prior step's raw markdown forward. Extracting
+    typed fields (options, evidence findings w/ confidence, projected metrics) between
+    stages would unlock numeric consistency checks. High-risk refactor near a working
+    pipeline — do it deliberately with the test suite as a guard, not in a rush.
+  - **Mock scenario-genericity:** `lib/mock.ts` content is cooling-center-specific, so
+    a non-heat scenario run in DEMO mode shows heat content (honestly demo-labeled, and
+    the one-click sample IS the heat scenario, so the primary demo path is coherent).
+  - **WorkspacePanel email-body HTML interpolation** (self-targeted to the operator's own
+    Gmail, user-editable before send — low real risk; sanitize if hardening further).
+  - **M16 returning-visitor landing bypass** (accepted UX: `civictas_seen` sends repeat
+    visitors straight to the studio, which has the one-click sample; brand mark → home).
+  - Audit scripts: `.../workflows/scripts/civictas-audit-v2-*.js`,
+    `civictas-audit-v3-confirm-*.js`, `civictas-audit-v4-final-*.js`.
 
 ---
 
