@@ -171,11 +171,17 @@ Proven loop: **audit (workflow) → fix (you, sequential) → tsc+build → brow
   M6 landing stage-reveal, M7 chip token, M9 modal target, M11 chrome, M12 deep-link
   reviewer, M13 progress-nav aria, M14 landing skip-link, M15 aria-current).
 - **Truly remaining (all intentionally deferred, NOT blockers):**
-  - **M2 — structured inter-agent contract (LARGE, the next real substance lever):**
-    each pipeline step still pastes the prior step's raw markdown forward. Extracting
-    typed fields (options, evidence findings w/ confidence, projected metrics) between
-    stages would unlock numeric consistency checks. High-risk refactor near a working
-    pipeline — do it deliberately with the test suite as a guard, not in a rush.
+  - **M2 — structured inter-agent contract: DONE (safe slice).** `lib/extract.ts`
+    parses each agent's markdown into typed fields (options, confidence-tagged
+    findings, projection table, recommendation + rating). Used for (1) REAL
+    per-agent structural validation in the harness trace ("Struct." column: ok /
+    partial-with-missing-markers / fail — replaces the honest relabel with genuine
+    validation) and (2) cross-agent consistency (recommendation traces to a framed
+    option), surfaced honestly in the trace. Centralizes recommendation extraction
+    (closed M3). 9 tests in `lib/extract.test.ts`; suite now 24, all green. The
+    streaming/rendering flow was deliberately NOT changed (kept the demo stable).
+    OPTIONAL future: have agents emit structured JSON between stages for numeric
+    cross-checks — bigger, higher-risk; only with the test suite as a guard.
   - **Mock scenario-genericity:** `lib/mock.ts` content is cooling-center-specific, so
     a non-heat scenario run in DEMO mode shows heat content (honestly demo-labeled, and
     the one-click sample IS the heat scenario, so the primary demo path is coherent).
