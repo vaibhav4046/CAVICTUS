@@ -81,18 +81,52 @@ export function resolveProvider(): Provider {
   return "mock";
 }
 
-/** Public, secret-free description of the active engine — for the UI badge. */
-export function providerInfo(): { provider: Provider; model: string; search: boolean } {
+/** Turn a raw model slug into a human label for the engine badge. */
+function humanizeModel(slug: string): string {
+  const s = slug.toLowerCase();
+  if (s.includes("llama-3.3-70b") || s.includes("llama-3-3-70b")) return "Llama 3.3 70B";
+  if (s.includes("llama-3.1-8b") || s.includes("llama-3-1-8b")) return "Llama 3.1 8B";
+  if (s.includes("gemini")) return s.includes("flash") ? "Gemini Flash" : "Gemini";
+  return slug.split("/").pop() || slug;
+}
+
+/**
+ * Public, secret-free description of the active engine — for the UI badge.
+ * `model` is the model the 5 streaming agents use; `councilModel` is what the
+ * (non-streaming) council actually runs — these can differ, so the UI must label
+ * each with the model it truly used. `label` is a human-friendly platform+model
+ * string. `grounding` says how the Evidence step grounds: "google" = native
+ * Google Search (Gemini), "web" = attempted DuckDuckGo with benchmark fallback
+ * (Groq/OpenRouter), "none" = offline demo.
+ */
+export function providerInfo(): {
+  provider: Provider;
+  model: string;
+  councilModel: string;
+  search: boolean;
+  grounding: "google" | "web" | "none";
+  label: string;
+} {
   const provider = resolveProvider();
   const model =
-    provider === "gemini"
-      ? GEMINI_MODEL
-      : provider === "groq"
-      ? GROQ_MODEL
-      : provider === "openrouter"
-      ? OPENROUTER_MODEL
-      : "demo-mock";
-  return { provider, model, search: provider !== "mock" };
+    provider === "gemini" ? GEMINI_MODEL
+    : provider === "groq" ? GROQ_MODEL
+    : provider === "openrouter" ? OPENROUTER_MODEL
+    : "demo-mock";
+  const councilModel =
+    provider === "gemini" ? GEMINI_MODEL
+    : provider === "groq" ? GROQ_MODEL
+    : provider === "openrouter" ? COMPLETE_MODEL
+    : "demo-mock";
+  const platform =
+    provider === "gemini" ? "Google Gemini"
+    : provider === "groq" ? "Groq"
+    : provider === "openrouter" ? (/nvidia/i.test(OPENROUTER_BASE_URL) ? "NVIDIA NIM" : "OpenRouter")
+    : "Demo";
+  const grounding: "google" | "web" | "none" =
+    provider === "gemini" ? "google" : provider === "mock" ? "none" : "web";
+  const label = provider === "mock" ? "Demo · offline mock" : `${platform} · ${humanizeModel(model)}`;
+  return { provider, model, councilModel, search: provider !== "mock", grounding, label };
 }
 
 /**

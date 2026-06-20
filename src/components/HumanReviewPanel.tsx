@@ -138,7 +138,9 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   const isValid =
     decisionType !== "" &&
     humanRationale.trim().length > 0 &&
-    reasonedNote.trim().length >= 12 &&
+    // Demonstrably-reasoned floor: a substantive note (not a 1-word rubber stamp)
+    // naming a specific data gap, dissenting voice, or equity risk weighed.
+    reasonedNote.trim().length >= 40 &&
     checkDataGaps &&
     checkEquity &&
     checkCommunity;

@@ -86,9 +86,9 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <p className="text-sm text-muted leading-relaxed">
-            CIVICTAS is a Decision Intelligence platform engineered for civic and public organizations.
-            It splits complex decision-making into five specialized, sequential AI evaluations, culminating in a
-            <strong className="text-ink"> mandatory human review</strong> step.
+            CIVICTAS helps public teams make hard resource decisions. It breaks the decision into five
+            specialized AI agents that work in sequence, then hands the result to a
+            <strong className="text-ink"> mandatory human review</strong> — the AI advises, a person decides.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -106,9 +106,9 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               <span className="text-xs font-semibold px-2 py-0.5 bg-agent-evidence/15 text-agent-evidence rounded-full font-mono">
                 AGENT 2
               </span>
-              <h3 className="font-semibold text-ink mt-2">Search Grounding</h3>
+              <h3 className="font-semibold text-ink mt-2">Evidence &amp; grounding</h3>
               <p className="text-xs text-muted mt-1">
-                When a Gemini key is connected, launches live Google Search grounding to research regional demographics and public safety/health benchmarks; otherwise it reasons over clearly-labeled public benchmarks. Every finding carries a confidence level and named data gaps.
+                Researches regional demographics and public safety/health benchmarks — with live web search grounding where the provider supports it (Gemini adds native Google Search), otherwise clearly-labeled public benchmarks. Every finding carries a confidence level and named data gaps.
               </p>
             </div>
 
@@ -161,7 +161,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             onClick={onClose}
             className="px-4 py-2 bg-accent hover:opacity-90 text-on-accent font-medium text-sm rounded-lg shadow-sm transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
           >
-            I Understand the Protocol
+            Got it
           </button>
         </div>
       </div>

@@ -5,10 +5,11 @@ import RealityPill from "./RealityPill";
 
 interface LandingProps {
   onEnter: () => void;
-  engine: { provider: string; model: string; search: boolean } | null;
+  onTour: () => void;
+  engine: { provider: string; model: string; search: boolean; label?: string; grounding?: "google" | "web" | "none" } | null;
 }
 
-export default function Landing({ onEnter, engine }: LandingProps) {
+export default function Landing({ onEnter, onTour, engine }: LandingProps) {
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col">
       <a
@@ -72,10 +73,16 @@ export default function Landing({ onEnter, engine }: LandingProps) {
               Open the studio
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
+            <button
+              onClick={onTour}
+              className="text-xs font-semibold text-muted hover:text-ink transition-colors rounded-md px-2 py-1.5 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            >
+              Take the 30-second tour
+            </button>
             {engine && (
               <span className="inline-flex items-center gap-2 text-[11px] font-mono text-muted">
                 <span>
-                  {engine.provider} · {engine.model}
+                  {engine.label ?? `${engine.provider} · ${engine.model}`}
                 </span>
                 <RealityPill
                   kind={engine.provider === "mock" ? "mock" : "ready"}

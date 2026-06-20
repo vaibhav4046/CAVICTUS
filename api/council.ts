@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runCouncil } from "../lib/council.js";
+import { clientIp, rateLimited } from "../lib/ratelimit.js";
 
 export const config = { maxDuration: 60 };
 
@@ -13,6 +14,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sharedSecret = process.env.API_SHARED_SECRET || "";
   if (sharedSecret && req.headers["x-civictas-key"] !== sharedSecret) {
     res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  if (rateLimited(clientIp(req))) {
+    res.status(429).json({ error: "Too many requests — please slow down." });
     return;
   }
   const b = (req.body || {}) as Record<string, string>;

@@ -1,24 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runAgentStream, type AgentBody, type Source } from "../../lib/agents.js";
+import { clientIp, rateLimited } from "../../lib/ratelimit.js";
 
 export const config = { maxDuration: 60 };
-
-// Best-effort in-memory rate limit. Resets on cold start (no shared store on
-// Hobby), so it blunts casual abuse rather than guaranteeing a hard ceiling.
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 40;
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = hits.get(ip);
-  if (!entry || now > entry.resetAt) {
-    hits.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > MAX_REQUESTS;
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -32,10 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const ip =
-    (req.headers["x-forwarded-for"] as string)?.split(",").pop()?.trim() ||
-    req.socket?.remoteAddress ||
-    "unknown";
+  const ip = clientIp(req);
   if (rateLimited(ip)) {
     res.status(429).json({ error: "Too many requests — please slow down." });
     return;

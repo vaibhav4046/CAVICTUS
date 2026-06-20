@@ -30,7 +30,10 @@ export async function sendGmailEmail(
       `To: ${to}`,
       `Subject: ${subject}`,
       'MIME-Version: 1.0',
-      'Content-Type: text/html; charset=utf-8',
+      // Plain text: the body is AI-generated prose. Sending as text/plain means
+      // any prompt-injected markup is shown literally, never executed in the
+      // recipient's mail client.
+      'Content-Type: text/plain; charset=utf-8',
       '',
       htmlBody
     ];

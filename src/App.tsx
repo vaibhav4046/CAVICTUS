@@ -210,7 +210,14 @@ export default function App() {
   // "Live" just because a key is configured (runs can still fall back to demo).
   const [hasLiveSuccess, setHasLiveSuccess] = useState(false);
   const [groundingSources, setGroundingSources] = useState<Array<{ title: string; url: string }>>([]);
-  const [engine, setEngine] = useState<{ provider: string; model: string; search: boolean } | null>(null);
+  const [engine, setEngine] = useState<{
+    provider: string;
+    model: string;
+    search: boolean;
+    label?: string;
+    councilModel?: string;
+    grounding?: "google" | "web" | "none";
+  } | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
   const [dataset, setDataset] = useState("");
   const [view, setView] = useState<"landing" | "onboarding" | "studio">(() =>
@@ -1145,7 +1152,22 @@ export default function App() {
   }
 
   if (view === "landing") {
-    return <Landing onEnter={() => setView("onboarding")} engine={engine} />;
+    return (
+      <Landing
+        // Primary CTA goes straight to the working studio — no wizard wall in
+        // front of the one-click sample run. The 4-step intro is optional (onTour).
+        onEnter={() => {
+          try {
+            localStorage.setItem("civictas_seen", "1");
+          } catch {
+            /* ignore */
+          }
+          setView("studio");
+        }}
+        onTour={() => setView("onboarding")}
+        engine={engine}
+      />
+    );
   }
   if (view === "onboarding") {
     return (
@@ -1223,7 +1245,7 @@ export default function App() {
                 aria-label={`AI engine: ${engine.provider} ${engine.model}`}
               >
                 <Cpu className="w-3 h-3 shrink-0" aria-hidden="true" />
-                {engine.provider} · {engine.model}
+                {engine.label ?? `${engine.provider} · ${engine.model}`}
               </span>
               <RealityPill
                 kind={engine.provider === "mock" ? "mock" : hasLiveSuccess ? "live" : "ready"}
@@ -1232,7 +1254,7 @@ export default function App() {
                   engine.provider === "mock"
                     ? "Offline demo mock — no API key configured"
                     : hasLiveSuccess
-                    ? "A live model response has streamed this session (Gemini adds Google Search grounding; other providers reason over labeled benchmarks)"
+                    ? `A live model response has streamed this session. ${engine.grounding === "google" ? "Evidence uses live Google Search grounding." : engine.grounding === "web" ? "Evidence attempts live web search and falls back to labeled public benchmarks." : ""}`
                     : "A live model is configured but no live run has completed yet — runs may fall back to a clearly labeled demo"
                 }
               />
@@ -1412,8 +1434,8 @@ export default function App() {
                     <RealityPill kind="mock" label="Demo mode" />
                     <p className="text-xs text-ink leading-relaxed min-w-0">
                       Outputs below are <strong>canned demo examples</strong>, not live AI — shown
-                      because the live model was unavailable or demo mode was requested. Add a Gemini
-                      or Groq key to run the real pipeline.
+                      because the live model was unavailable or demo mode was requested. Configure an
+                      API key (any supported provider) to run the real pipeline.
                     </p>
                   </div>
                 )}
@@ -1507,7 +1529,7 @@ export default function App() {
                             </span>
                           ) : engine ? (
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted">
-                              {engine.provider} · {engine.model}
+                              {engine.label ?? `${engine.provider} · ${engine.model}`}
                               <RealityPill
                                 kind={engine.provider === "mock" ? "mock" : hasLiveSuccess ? "live" : "ready"}
                                 pulse={hasLiveSuccess}

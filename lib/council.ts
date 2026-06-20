@@ -214,7 +214,9 @@ Provide 6-9 dissents drawn from DIFFERENT roles/segments, prioritizing the most 
     topRisk: String(parsed.topRisk || "Coverage of the most at-risk residents must be verified on the ground.").slice(0, 300),
     dissents,
     provider: info.provider,
-    model: info.model,
+    // Report the model the council ACTUALLY ran (non-streaming council can use a
+    // different, faster model than the streaming agents) — never mislabel it.
+    model: info.councilModel,
   };
 }
 
