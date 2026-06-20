@@ -65,7 +65,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
 
   useEffect(() => {
     if (!props.active || !props.recommendation) return;
-    const key = `${props.demo ? "demo" : "live"}|${props.recommendation}`;
+    const key = `${props.demo ? "demo" : "live"}|${props.recommendation}|${(props.evidence || "").length}|${(props.projections || "").length}|${(props.audit || "").length}`;
     if (fetchedKey.current === key) return;
     fetchedKey.current = key;
 
@@ -92,7 +92,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
       })
       .catch(() => setError("Council request failed."))
       .finally(() => setLoading(false));
-  }, [props.active, props.recommendation, props.demo]);
+  }, [props.active, props.recommendation, props.demo, props.evidence, props.projections, props.audit]);
 
   if (!props.active) return null;
 

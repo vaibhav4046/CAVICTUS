@@ -169,7 +169,10 @@ Provide 6-9 dissents drawn from DIFFERENT roles/segments, prioritizing the most 
   }
 
   if (!parsed) {
-    return mockCouncil(info.provider, info.model);
+    // The live model failed or returned unparseable JSON. Return the canned panel
+    // labeled as the deterministic mock — NEVER stamped with the live provider, or
+    // the UI would attribute numbers the model never produced to that model.
+    return mockCouncil("mock", "demo-mock");
   }
 
   let approve = clampInt(parsed.approve, 60);
