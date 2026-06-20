@@ -743,6 +743,9 @@ export default function App() {
   const handleRetryAgent = async (stepNum: number) => {
     setIsPipelineRunning(true);
     setPipelineError(null);
+    // Evidence sources come from step 2. Only clear them if step 2 will re-run,
+    // so retrying a later step doesn't wipe still-valid grounding sources.
+    if (stepNum <= 2) setGroundingSources([]);
     setAgentStates((prev) => {
       const updated = { ...prev };
       updated[stepNum as 1 | 2 | 3 | 4 | 5] = { status: "running", output: "" };
