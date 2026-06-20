@@ -100,11 +100,16 @@ export default function CouncilPanel(props: CouncilPanelProps) {
 
   return (
     <div className="bg-surface border border-border-line rounded-2xl shadow-sm p-5 space-y-5">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-          <Users className="w-4 h-4 text-accent" aria-hidden="true" />
-          108-persona deliberation stress-test
-        </h3>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+            <Users className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
+            108-persona deliberation stress-test
+          </h3>
+          <p className="text-[11px] text-faint mt-0.5">
+            one model estimating a fixed 108-archetype roster — a stress-test, not 108 live agents
+          </p>
+        </div>
         {result && (
           <span className="text-[10px] font-mono text-muted">
             judged by {result.provider} · {result.model}
