@@ -60,10 +60,20 @@ Browser (React 19 + Vite + Tailwind v4)
 Server  (Express locally · Vercel serverless functions in prod)
    │  lib/agents.ts  — single source of truth for prompts + streaming
    ▼
-Provider   GEMINI_API_KEY → Gemini (+ Google Search grounding)
-           GROQ_API_KEY   → Groq (free, fast)
-           neither        → built-in mock so the demo always runs
+Provider   GEMINI_API_KEY     → Gemini (+ native Google Search grounding)
+           GROQ_API_KEY       → Groq (free, fast)
+           OPENROUTER_API_KEY → any OpenAI-compatible endpoint (OpenRouter,
+                                NVIDIA NIM, Together, Fireworks, a local server)
+           none               → built-in mock so the demo always runs
 ```
+
+> **The public demo at civictas.vercel.app currently runs LIVE on NVIDIA NIM**
+> (OpenAI-compatible, Llama 3.1 8B) — chosen for fast, reliable streaming so the
+> full 5-agent pipeline + council completes live in well under a minute. The model
+> is swappable per `OPENROUTER_MODEL` (e.g. Llama 3.3 70B for more depth at higher
+> latency). Resolution order is `LLM_PROVIDER` override → Gemini → Groq →
+> OpenRouter → mock. A slow or failed live call degrades to the clearly-labeled
+> deterministic demo, so a quota limit can never break a run.
 
 The model key is **server-side only** — the browser never sees it and only ever
 calls `/api/*`. Model output is rendered through a safe tokenizer (no
@@ -98,6 +108,20 @@ vercel --prod
 Add `GEMINI_API_KEY` (or `GROQ_API_KEY`) in **Project → Settings → Environment
 Variables** to switch the live link from demo mode to real AI.
 
+## Scripts & tests
+
+```bash
+npm run dev      # local dev server at http://localhost:3000
+npm run build    # production build (Vite + esbuild server bundle)
+npm start        # serve the production build
+npm test         # 24 unit tests (Vitest) — ledger hash-chain, share encode/decode,
+                 #   council roster, and the structured-contract extractors
+npm run lint     # TypeScript typecheck (tsc --noEmit)
+node scripts/eval.mjs   # honest, reproducible eval against the live API (see EVALUATION.md)
+```
+
+Requires **Node.js 18+**.
+
 ## Responsible-AI design (at a glance)
 
 | Risk | Mitigation built into CIVICTAS |
@@ -111,8 +135,9 @@ Variables** to switch the live link from demo mode to real AI.
 
 Built openly with AI assistance (and proud of it):
 
-- **Google AI Studio** + **Gemini** (`@google/genai`) — original scaffold and the primary model/grounding provider.
-- **Groq** — optional free, fast inference provider.
+- **NVIDIA NIM** (`build.nvidia.com`, OpenAI-compatible) — the inference provider powering the **live** public demo (Llama 3.1 8B, chosen for fast reliable streaming; swappable via `OPENROUTER_MODEL`).
+- **Google AI Studio** + **Gemini** (`@google/genai`) — original scaffold; supported provider that adds native Google Search grounding.
+- **Groq** / any **OpenAI-compatible** endpoint (OpenRouter, Together, Fireworks) — supported alternates.
 - **Claude Code (Anthropic)** — pair-programming / engineering assistant used to harden, refactor, secure, and deploy the app.
 - **Data:** the demo uses clearly-labeled public benchmarks (CDC Heat & Health Tracker, EPA Heat Island, U.S. Census ACS, NOAA) and synthetic seed decisions — **no private or personal data.**
 
