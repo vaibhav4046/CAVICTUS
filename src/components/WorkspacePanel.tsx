@@ -1,25 +1,31 @@
 import { useState, useEffect } from "react";
-import { 
-  Mail, 
-  Database, 
-  Calendar, 
-  HardDrive, 
-  CheckSquare, 
-  MessageSquare, 
-  ChevronDown, 
-  ChevronUp, 
+import {
+  Mail,
+  Database,
+  Calendar,
+  HardDrive,
+  CheckSquare,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Info,
-  Video
+  Video,
+  LogIn,
+  LogOut,
+  ShieldCheck,
+  ArrowLeftRight
 } from "lucide-react";
-import { 
-  sendGmailEmail, 
-  exportSheetsSimulation, 
-  createCalendarMeeting, 
-  uploadDriveFile, 
-  createTaskItem, 
-  sendChatMessage 
+import {
+  sendGmailEmail,
+  exportSheetsSimulation,
+  createCalendarMeeting,
+  uploadDriveFile,
+  createTaskItem,
+  sendChatMessage
 } from "../utils/workspace";
+import BrandMark from "./BrandMark";
+import RealityPill from "./RealityPill";
 
 interface WorkspacePanelProps {
   category: string;
@@ -116,8 +122,11 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
   // Set up OAuth redirection callback listener
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+      // The /auth/callback popup is served from this same deployment (Vercel
+      // rewrite / Express route), so the only trusted sender is our own origin.
+      // Same-origin is stricter than the old allowlist and also fixes the live
+      // demo, where the prod origin is neither *.run.app nor localhost.
+      if (event.origin !== window.location.origin) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data?.token) {
@@ -435,7 +444,7 @@ Archived using CIVICTAS Workspace Connector.
         id="workspace-panel-header"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#4285F4] text-white rounded-xl shadow-sm">
+          <div className="p-2.5 bg-accent-soft text-accent rounded-xl shadow-sm">
             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
               <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1a8.45 8.45 0 0 0-1.69-.98l-.38-2.65C14.46  2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0  .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
             </svg>
@@ -454,13 +463,9 @@ Archived using CIVICTAS Workspace Connector.
         </div>
         <div className="flex items-center gap-2.5">
           {token ? (
-            <span className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[9px] font-mono font-bold px-2.5 py-1 rounded-full uppercase">
-              ● WORKSPACE LINKED
-            </span>
+            <RealityPill kind="live" label="Connected" className="hidden sm:inline-flex" />
           ) : (
-            <span className="hidden sm:inline-flex items-center gap-1.5 bg-surface border border-border-line text-muted text-[9px] font-mono font-bold px-2.5 py-1 rounded-full uppercase">
-              ○ OFF
-            </span>
+            <RealityPill kind="needs-credentials" label="Optional" className="hidden sm:inline-flex" />
           )}
           <div className="p-1 px-2 hover:bg-surface-solid rounded text-muted">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -470,45 +475,55 @@ Archived using CIVICTAS Workspace Connector.
 
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {/* Auth Banner */}
+          {/* Auth banner — ties the optional Workspace link into the CIVICTAS
+              brand ecosystem. Sign-in is OPTIONAL: the studio runs fully without
+              it; connecting only powers the export/notify actions below. */}
           <div className="p-4 bg-surface rounded-xl border border-border-line flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1 sm:max-w-xl text-xs">
-              <span className="text-[9px] uppercase font-mono font-bold tracking-wider text-accent block">OAuth Gateway</span>
-              <p className="text-muted leading-relaxed font-semibold">
-                To active integrations for Gmail, Sheets, Calendar, Drive, Tasks, Chat, and Google Meet, authenticate using your workspace identity or paste a sandbox token below.
+            <div className="space-y-2 sm:max-w-xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <BrandMark className="w-5 h-5 shrink-0 text-ink" />
+                <span className="font-display font-semibold tracking-tight text-sm text-ink">CIVICTAS</span>
+                <ArrowLeftRight className="w-3.5 h-3.5 text-faint shrink-0" aria-hidden="true" />
+                <span className="text-sm font-semibold text-muted">Google Workspace</span>
+                <RealityPill kind="simulated" label="Optional" className="ml-1" />
+              </div>
+              <p className="text-xs text-muted leading-relaxed font-medium">
+                Sign in to push the finished brief to Gmail, Sheets, Calendar, Drive, Tasks, Chat, and Meet — or paste a sandbox token. The decision studio runs fully without connecting.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 min-w-[200px] shrink-0 justify-end">
               {token ? (
-                <div className="flex flex-col gap-1.5 justify-end">
-                  <span className="text-[11px] text-emerald-500 font-bold text-right block">✓ Active session</span>
+                <div className="flex flex-col gap-2 items-end">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-positive font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    Active session
+                  </span>
                   <button
+                    type="button"
                     onClick={handleDisconnect}
-                    className="py-1.5 px-4 text-center cursor-pointer text-xs font-bold border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    className="inline-flex items-center justify-center gap-1.5 py-1.5 px-4 cursor-pointer text-xs font-bold border border-danger/30 text-danger hover:bg-danger/10 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                   >
-                    Disconnect Services
+                    <LogOut className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    Sign out
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-2.5 w-full justify-end">
-                  <button
-                    onClick={handleLaunchGoogleOAuth}
-                    className="py-2 px-4 bg-[#4285F4] text-white hover:opacity-95 text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white shrink-0">
-                      <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.53-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1c-6.076 0-11 4.924-11 11s4.924 11 11 11c6.34 0 10.556-4.437 10.556-10.714 0-.724-.078-1.275-.174-1.714H12.24z"/>
-                    </svg>
-                    Sign In with Google Cloud Workspace
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleLaunchGoogleOAuth}
+                  className="inline-flex items-center justify-center gap-2 py-2 px-4 bg-accent text-on-accent hover:opacity-95 text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                >
+                  <LogIn className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  Sign in with Google
+                </button>
               )}
             </div>
           </div>
 
           {/* Settings Section */}
           {!token && (
-            <div className="p-4 bg-surface-solid dark:bg-[#121620] border border-dashed border-border-line rounded-xl space-y-4">
+            <div className="p-4 bg-surface-2 border border-dashed border-border-line rounded-xl space-y-4">
               <div className="flex items-center gap-1.5 text-xs text-ink font-bold font-display">
                 <Info className="w-4 h-4 text-accent" />
                 <span>Choose Authentication Protocol:</span>
@@ -551,12 +566,13 @@ Archived using CIVICTAS Workspace Connector.
                       placeholder="ya29.a0Axoo..."
                       value={sandboxToken}
                       onChange={(e) => setSandboxToken(e.target.value)}
-                      className="border border-border-line text-xs p-2.5 rounded-lg flex-1 outline-none focus:border-accent font-mono select-all bg-surface-solid dark:bg-[#121620] text-ink"
+                      className="border border-border-line text-xs p-2.5 rounded-lg flex-1 outline-none focus:border-accent font-mono select-all bg-surface-2 text-ink"
                     />
                     {sandboxToken.trim() && (
                       <button
+                        type="button"
                         onClick={() => setToken(sandboxToken.trim())}
-                        className="py-2.5 px-4 bg-accent text-white hover:opacity-90 text-xs font-bold rounded-lg cursor-pointer transition-colors shrink-0"
+                        className="py-2.5 px-4 bg-accent text-on-accent hover:opacity-90 text-xs font-bold rounded-lg cursor-pointer transition-opacity shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2"
                       >
                         Authorize
                       </button>
@@ -573,7 +589,7 @@ Archived using CIVICTAS Workspace Connector.
                         placeholder="12345678-abcdef.apps.googleusercontent.com"
                         value={clientId}
                         onChange={(e) => setClientId(e.target.value)}
-                        className="border border-border-line text-xs p-2.5 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                        className="border border-border-line text-xs p-2.5 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                       />
                     </div>
                     <div className="space-y-1">
@@ -583,8 +599,8 @@ Archived using CIVICTAS Workspace Connector.
                       </div>
                     </div>
                   </div>
-                  <div className="p-3 bg-amber-500/5 dark:bg-amber-400/5 border border-amber-500/10 rounded-lg text-[11px] text-amber-500 leading-relaxed font-semibold">
-                    Warning: When using popup-based custom client OAuth, ensure "Authorized Redirect URIs" under Google Cloud Credentials includes: <span className="font-mono bg-surface-solid border px-1 py-0.5 border-border-line rounded">{window.location.origin}/auth/callback</span>
+                  <div className="p-3 bg-warning/10 border border-warning/25 rounded-lg text-[11px] text-warning leading-relaxed font-semibold">
+                    Warning: When using popup-based custom client OAuth, ensure "Authorized Redirect URIs" under Google Cloud Credentials includes: <span className="font-mono bg-surface-2 border px-1 py-0.5 border-border-line rounded">{window.location.origin}/auth/callback</span>
                   </div>
                 </div>
               )}
@@ -595,7 +611,7 @@ Archived using CIVICTAS Workspace Connector.
           <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${!token ? "opacity-45 pointer-events-none select-none select-text filter grayscale-[40%]" : ""}`}>
             
             {/* 1. GMAIL */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-gmail-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-gmail-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-red-500" />
@@ -615,7 +631,7 @@ Archived using CIVICTAS Workspace Connector.
                     placeholder="citymanager@riverside.gov"
                     value={emailTo}
                     onChange={(e) => setEmailTo(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
                 
@@ -637,7 +653,7 @@ Archived using CIVICTAS Workspace Connector.
                     rows={4}
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
-                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent font-mono leading-relaxed bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent font-mono leading-relaxed bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -652,9 +668,9 @@ Archived using CIVICTAS Workspace Connector.
                 {emailStatus.msg && (
                   <div className={`p-2 rounded-lg text-[11px] text-center font-bold border ${
                     emailStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : emailStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {emailStatus.msg}
@@ -664,7 +680,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 2. GOOGLE SHEETS */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-sheets-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-sheets-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Database className="w-4 h-4 text-emerald-500" />
@@ -683,12 +699,12 @@ Archived using CIVICTAS Workspace Connector.
                     type="text"
                     value={sheetTitle}
                     onChange={(e) => setSheetTitle(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
                 <div className="p-3 bg-accent/5 rounded-xl border border-accent/15 text-[11px] text-ink leading-relaxed">
-                  <span className="font-bold block text-accent mb-0.5 font-display">🚀 Outflow Columns mapping:</span>
+                  <span className="font-bold block text-accent mb-0.5 font-display">Outflow Columns mapping:</span>
                   Parses the Agent 3 comparison tables and loads Option keys, temporal metrics, and simulation values directly into cellular matrices in the sheet.
                 </div>
 
@@ -703,9 +719,9 @@ Archived using CIVICTAS Workspace Connector.
                 {sheetStatus.msg && (
                   <div className={`p-2.5 rounded-lg text-[11px] text-center font-bold border ${
                     sheetStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : sheetStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {sheetStatus.msg}
@@ -725,7 +741,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 3. CALENDAR & MEET */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-calendar-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-calendar-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-blue-500" />
@@ -744,7 +760,7 @@ Archived using CIVICTAS Workspace Connector.
                     type="text"
                     value={calSummary}
                     onChange={(e) => setCalSummary(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -756,7 +772,7 @@ Archived using CIVICTAS Workspace Connector.
                       type="datetime-local"
                       value={calStart}
                       onChange={(e) => setCalStart(e.target.value)}
-                      className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                      className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                     />
                   </div>
                   <div className="space-y-1">
@@ -766,7 +782,7 @@ Archived using CIVICTAS Workspace Connector.
                       type="datetime-local"
                       value={calEnd}
                       onChange={(e) => setCalEnd(e.target.value)}
-                      className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                      className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                     />
                   </div>
                 </div>
@@ -778,7 +794,7 @@ Archived using CIVICTAS Workspace Connector.
                     rows={2}
                     value={calDesc}
                     onChange={(e) => setCalDesc(e.target.value)}
-                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -807,9 +823,9 @@ Archived using CIVICTAS Workspace Connector.
                 {calStatus.msg && (
                   <div className={`p-2.5 rounded-lg text-[11px] text-center font-bold border ${
                     calStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : calStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {calStatus.msg}
@@ -829,7 +845,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 4. GOOGLE DRIVE */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-drive-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-drive-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-yellow-500" />
@@ -848,7 +864,7 @@ Archived using CIVICTAS Workspace Connector.
                     type="text"
                     value={driveFileName}
                     onChange={(e) => setDriveFileName(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -867,9 +883,9 @@ Archived using CIVICTAS Workspace Connector.
                 {driveStatus.msg && (
                   <div className={`p-2.5 rounded-lg text-[11px] text-center font-bold border ${
                     driveStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : driveStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {driveStatus.msg}
@@ -889,7 +905,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 5. GOOGLE TASKS */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-tasks-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-tasks-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <CheckSquare className="w-4 h-4 text-indigo-500" />
@@ -908,7 +924,7 @@ Archived using CIVICTAS Workspace Connector.
                     type="text"
                     value={taskTitle}
                     onChange={(e) => setTaskTitle(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink font-semibold"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink font-semibold"
                   />
                 </div>
 
@@ -919,7 +935,7 @@ Archived using CIVICTAS Workspace Connector.
                     rows={2}
                     value={taskNotes}
                     onChange={(e) => setTaskNotes(e.target.value)}
-                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -934,9 +950,9 @@ Archived using CIVICTAS Workspace Connector.
                 {taskStatus.msg && (
                   <div className={`p-2 rounded-lg text-[11px] text-center font-bold border ${
                     taskStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : taskStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {taskStatus.msg}
@@ -946,7 +962,7 @@ Archived using CIVICTAS Workspace Connector.
             </div>
 
             {/* 6. GOOGLE CHAT */}
-            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-solid/40 dark:bg-[#121620]/30" id="gsuite-chat-box">
+            <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-chat-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-sky-500" />
@@ -966,7 +982,7 @@ Archived using CIVICTAS Workspace Connector.
                     placeholder="spaces/AAAAXXXXXX"
                     value={chatSpaceId}
                     onChange={(e) => setChatSpaceId(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink"
                   />
                 </div>
 
@@ -977,7 +993,7 @@ Archived using CIVICTAS Workspace Connector.
                     rows={4}
                     value={chatMsgText}
                     onChange={(e) => setChatMsgText(e.target.value)}
-                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-solid dark:bg-[#121620] text-ink font-mono"
+                    className="border border-border-line text-[11px] p-2 rounded-lg w-full outline-none focus:border-accent bg-surface-2 text-ink font-mono"
                   />
                 </div>
 
@@ -992,9 +1008,9 @@ Archived using CIVICTAS Workspace Connector.
                 {chatStatus.msg && (
                   <div className={`p-2 rounded-lg text-[11px] text-center font-bold border ${
                     chatStatus.type === "success" 
-                      ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-500" 
+                      ? "bg-positive/15 border-positive/30 text-positive" 
                       : chatStatus.type === "error" 
-                        ? "bg-rose-500/15 border-rose-500/20 text-rose-500" 
+                        ? "bg-danger/15 border-danger/30 text-danger" 
                         : "bg-surface border-border-line text-ink animate-pulse"
                   }`}>
                     {chatStatus.msg}

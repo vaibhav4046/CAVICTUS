@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Check, ShieldAlert, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Check, ShieldAlert, ChevronDown, ChevronUp, Info, BookMarked, ExternalLink } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { AgentState, PipelineOutputs } from "../types";
 import { parseMarkdownSections, extractMemoryNote, getConfidencePill } from "../utils";
+import EquityRiskSummary from "./EquityRiskSummary";
 
 interface PipelinePanelProps {
   outputs: PipelineOutputs;
@@ -92,8 +93,16 @@ export default function PipelinePanel(props: PipelinePanelProps) {
    * Safe inline renderer for **bold** and [label](url). Builds real React nodes
    * via tokenization — NO dangerouslySetInnerHTML, so model output cannot inject
    * markup or scripts into the DOM.
+   *
+   * When `citationMap` is supplied (Evidence step), any [label](url) whose URL
+   * matches a grounding source renders the label followed by a numbered [n]
+   * superscript link instead of a bare arrow — tying inline references to the
+   * numbered Sources list.
    */
-  const renderFormattedLine = (line: string): React.ReactNode => {
+  const renderFormattedLine = (
+    line: string,
+    citationMap?: Map<string, number>
+  ): React.ReactNode => {
     if (!line) return null;
 
     const pattern = /(\*\*([^*]+)\*\*)|(\[([^\]]+)\]\(([^)]+)\))/g;
@@ -117,17 +126,40 @@ export default function PipelinePanel(props: PipelinePanelProps) {
         // [label](url)
         const url = safeUrl(match[5]);
         if (url) {
-          nodes.push(
-            <a
-              key={key++}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline inline-flex items-center gap-0.5 font-semibold"
-            >
-              {match[4]} <span className="text-xs" aria-hidden="true">↗</span>
-            </a>
-          );
+          const citeNum = citationMap?.get(url);
+          if (citeNum) {
+            // Inline citation: keep the label as text, append a [n] superscript
+            // link that points at the same vetted source.
+            nodes.push(
+              <React.Fragment key={key++}>
+                {match[4]}
+                <sup>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent hover:underline font-bold text-[0.7em] ml-0.5"
+                    aria-label={`Source ${citeNum}`}
+                  >
+                    [{citeNum}]
+                  </a>
+                </sup>
+              </React.Fragment>
+            );
+          } else {
+            nodes.push(
+              <a
+                key={key++}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline inline-flex items-center gap-0.5 font-semibold"
+              >
+                {match[4]}
+                <ExternalLink className="w-3 h-3 shrink-0" aria-hidden="true" />
+              </a>
+            );
+          }
         } else {
           nodes.push(match[4]);
         }
@@ -145,23 +177,83 @@ export default function PipelinePanel(props: PipelinePanelProps) {
   /**
    * Smart renderer that renders blocks of markdown styled with Tailwind
    */
-  const renderMarkdownText = (rawText: string, searchSources: Array<{title: string; url: string}>) => {
-    // Strip metadata tags from display
+  const renderMarkdownText = (
+    rawText: string,
+    searchSources: Array<{ title: string; url: string }>,
+    agentNum?: number
+  ) => {
+    // Strip metadata tags from display. The JSON payload contains "]" (the
+    // sources array), so the matcher must span to the tag's final "]" — a
+    // bare [^\]]+ stops early and leaves a stray "}]" in the rendered text.
     let textToParse = rawText;
-    const metadataMatch = rawText.match(/\[METADATA_JSON:[^\]]+\]/);
-    if (metadataMatch) {
-      textToParse = rawText.replace(/\[METADATA_JSON:[^\]]+\]/, "").trim();
-    }
+    textToParse = textToParse.replace(/\[METADATA_JSON:\s*\{[\s\S]*\}\s*\]/, "").trim();
 
     const sections = parseMarkdownSections(textToParse);
+
+    // Citations only apply to the Evidence step (Agent 2), which is the agent
+    // that grounds its findings in external sources.
+    const enableCitations = agentNum === 2;
+
+    // Numbered, vetted source registry built from the grounding array. Each URL
+    // passes the same safe-URL gate used for inline links; only http/https
+    // survive, so a malformed or javascript: URL never becomes an anchor.
+    const numberedSources: Array<{ n: number; title: string; url: string }> = [];
+    const citationMap = new Map<string, number>();
+    if (enableCitations) {
+      for (const src of searchSources) {
+        const safe = safeUrl(src.url);
+        if (!safe || citationMap.has(safe)) continue;
+        const n = numberedSources.length + 1;
+        numberedSources.push({ n, title: src.title || safe, url: safe });
+        citationMap.set(safe, n);
+      }
+    }
+
+    // A model "# Sources" section is replaced by our numbered card, so suppress
+    // the raw one to avoid a duplicate, unnumbered URL list.
+    const isSourcesHeading = (title: string) => /^\s*sources\s*$/i.test(title);
+    const hasSourcesSection = enableCitations && sections.some((s) => isSourcesHeading(s.title));
 
     if (sections.length === 0) {
       return <p className="text-sm text-muted italic">Synthesizing detailed advisory outputs...</p>;
     }
 
+    const sourcesCard = enableCitations ? (
+      numberedSources.length > 0 ? (
+        <div className="mt-4 p-4 bg-surface-2 border border-border-line rounded-xl" id="evidence-sources">
+          <h4 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5 font-display mb-2.5">
+            <BookMarked className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
+            Sources
+          </h4>
+          <ol className="space-y-1.5">
+            {numberedSources.map((s) => (
+              <li key={s.n} className="flex items-start gap-2 text-sm leading-relaxed min-w-0">
+                <span className="font-mono text-xs font-bold text-accent shrink-0 mt-0.5">[{s.n}]</span>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline inline-flex items-start gap-1 min-w-0"
+                >
+                  <span className="min-w-0 break-words">{s.title}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : hasSourcesSection ? (
+        <p className="mt-4 text-sm text-muted italic leading-relaxed flex items-center gap-1.5">
+          <BookMarked className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          No external sources — benchmark estimates used
+        </p>
+      ) : null
+    ) : null;
+
     return (
       <div className="space-y-4">
         {sections.map((section, idx) => {
+          if (enableCitations && isSourcesHeading(section.title)) return null;
           const isWhatWeDontKnowBox = section.isBoxed;
           const isRiskBox = section.isWarning;
 
@@ -226,7 +318,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                   <ul key={`list-${key}`} className="list-disc pl-5 my-2.5 space-y-1.5 text-ink text-sm">
                     {currentList.map((item, itemIdx) => (
                       <li key={itemIdx} className="leading-relaxed">
-                        {renderFormattedLine(item)}
+                        {renderFormattedLine(item, citationMap)}
                       </li>
                     ))}
                   </ul>
@@ -244,7 +336,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 renderedLines.push(
                   // R2: text-sm (was text-xs); R1: text-ink (was text-ink/90)
                   <p key={lineIdx} className="text-sm text-ink my-1.5 pl-1 leading-relaxed">
-                    {renderFormattedLine(trimmed)}
+                    {renderFormattedLine(trimmed, citationMap)}
                   </p>
                 );
               } else if (trimmed === "") {
@@ -254,7 +346,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 renderedLines.push(
                   // R2: text-sm (was text-xs); R1: text-ink (was text-ink/90)
                   <p key={lineIdx} className="text-sm text-ink leading-relaxed my-2">
-                    {renderFormattedLine(trimmed)}
+                    {renderFormattedLine(trimmed, citationMap)}
                   </p>
                 );
               }
@@ -310,6 +402,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             </div>
           );
         })}
+        {sourcesCard}
       </div>
     );
   };
@@ -533,7 +626,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                     {cleanedOutput ? (
                       // R1: bg-surface/20 -> bg-surface-2; R2: text-[11px] -> text-sm; text-ink/90 -> text-ink
                       <div className="prose prose-sm max-w-none text-sm leading-relaxed text-ink select-text bg-surface-2 p-3 border border-dashed border-border-line rounded-xl">
-                        {renderMarkdownText(cleanedOutput, props.groundingSources)}
+                        {renderMarkdownText(cleanedOutput, props.groundingSources, agent.num)}
                       </div>
                     ) : (
                       <div className="space-y-2.5">
@@ -578,7 +671,7 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                     aria-live="polite"
                     aria-label={`${agent.title} output`}
                   >
-                    {renderMarkdownText(cleanedOutput, props.groundingSources)}
+                    {renderMarkdownText(cleanedOutput, props.groundingSources, agent.num)}
                   </div>
                 )}
               </div>
@@ -587,6 +680,11 @@ export default function PipelinePanel(props: PipelinePanelProps) {
           );
         })}
       </div>
+
+      {/* Equity & risk digest — surfaced from the real Agent 4 audit, not scored. */}
+      {props.agentStates[4].status === "done" && props.agentStates[4].output.trim() && (
+        <EquityRiskSummary step4Output={props.agentStates[4].output} />
+      )}
     </section>
   );
 }
