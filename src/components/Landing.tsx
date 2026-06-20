@@ -63,7 +63,7 @@ export default function Landing({ onEnter, engine }: LandingProps) {
                   pulse={engine.search}
                   title={
                     engine.search
-                      ? "Connected to a live model with web grounding"
+                      ? "Connected to a live model (Gemini adds live Google Search grounding; other providers reason over labeled benchmarks)"
                       : "Offline demo mock — no API key configured"
                   }
                 />
@@ -78,9 +78,10 @@ export default function Landing({ onEnter, engine }: LandingProps) {
         {/* Positioning + scope (problem-understanding signal) */}
         <div className="mt-12 w-full max-w-2xl text-left bg-surface border border-border-line rounded-2xl p-5 shadow-sm">
           <p className="text-xs text-muted leading-relaxed">
-            <strong className="text-ink">Why it matters:</strong> in many cities only an estimated
-            32–51% of cooling centers sit within walking distance of the most heat-vulnerable
-            residents. CIVICTAS is a per-decision advising layer that sits between deliberation
+            <strong className="text-ink">Why it matters:</strong> in many cities a large share of
+            cooling centers sit beyond walking distance of the most heat-vulnerable residents — the
+            "optimize for the most people" default quietly routes help away from those who need it
+            most. CIVICTAS is a per-decision advising layer that sits between deliberation
             tools (Polis, Decidim) and policy simulators (PolicyEngine): it advises, audits equity,
             and forces an accountable human sign-off.
           </p>

@@ -12,7 +12,7 @@ const STEPS = [
   {
     icon: Workflow,
     title: "Watch the agents work",
-    body: "Five specialized agents stream their thinking, then a 108-persona council votes — all grounded with real web search and shown with confidence levels and data gaps.",
+    body: "Five specialized agents stream their thinking, then a 108-persona council votes — grounded with live web search when a Gemini key is connected (otherwise labeled public benchmarks), and always shown with confidence levels and data gaps.",
   },
   {
     icon: UserCheck,

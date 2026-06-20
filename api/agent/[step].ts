@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const ip =
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    (req.headers["x-forwarded-for"] as string)?.split(",").pop()?.trim() ||
     req.socket?.remoteAddress ||
     "unknown";
   if (rateLimited(ip)) {

@@ -34,6 +34,33 @@ function env(name: string): string {
   return (process.env[name] || "").replace(new RegExp(String.fromCharCode(0xfeff), "g"), "").trim();
 }
 
+// Untrusted payload fields are escaped before going into HTML (email) or XML
+// (Twilio TwiML), and links are restricted to http(s), to block injection.
+function htmlEscape(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function xmlEscape(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+function safeHttpUrl(u: string): string {
+  try {
+    const p = new URL(u);
+    return p.protocol === "https:" || p.protocol === "http:" ? u : "#";
+  } catch {
+    return "#";
+  }
+}
+
 function summary(p: ReviewPayload): string {
   return `CIVICTAS — human review needed
 Decision: ${p.title}
@@ -80,7 +107,7 @@ async function sendEmail(p: ReviewPayload): Promise<ChannelStatus> {
         from: env("REVIEW_EMAIL_FROM") || "CIVICTAS <onboarding@resend.dev>",
         to: [to],
         subject: `CIVICTAS review: ${p.title}`,
-        html: `<h2>Human review needed</h2><p><b>${p.title}</b></p><p>Proposal: ${p.proposal}<br/>AI confidence: ${p.confidence}</p><p><a href="${p.reviewLink}">Open and decide in CIVICTAS</a></p>`,
+        html: `<h2>Human review needed</h2><p><b>${htmlEscape(p.title)}</b></p><p>Proposal: ${htmlEscape(p.proposal)}<br/>AI confidence: ${htmlEscape(p.confidence)}</p><p><a href="${htmlEscape(safeHttpUrl(p.reviewLink))}">Open and decide in CIVICTAS</a></p>`,
       }),
     });
     const ok = resp.ok;
@@ -119,7 +146,7 @@ async function placeVoiceCall(p: ReviewPayload): Promise<ChannelStatus> {
     return { channel: "voice", configured: false, ok: true, simulated: true, detail: "Simulated (set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM + REVIEW_PHONE)." };
   }
   try {
-    const twiml = `<Response><Say voice="Polly.Joanna">This is CIVICTAS. A human review is needed for the decision: ${p.title}. The recommended option is: ${p.proposal}. With confidence ${p.confidence}.</Say><Pause length="1"/><Gather numDigits="1"><Say>Press 1 if you acknowledge and will open the review. Otherwise, hang up.</Say></Gather></Response>`;
+    const twiml = `<Response><Say voice="Polly.Joanna">This is CIVICTAS. A human review is needed for the decision: ${xmlEscape(p.title)}. The recommended option is: ${xmlEscape(p.proposal)}. With confidence ${xmlEscape(p.confidence)}.</Say><Pause length="1"/><Gather numDigits="1"><Say>Press 1 if you acknowledge and will open the review. Otherwise, hang up.</Say></Gather></Response>`;
     const body = new URLSearchParams({ To: to, From: from, Twiml: twiml });
     const auth = Buffer.from(`${sid}:${token}`).toString("base64");
     const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`, {
