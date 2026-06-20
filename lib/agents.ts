@@ -40,7 +40,7 @@ export interface Source {
   url: string;
 }
 
-export type Provider = "gemini" | "groq" | "mock";
+export type Provider = "gemini" | "groq" | "openrouter" | "mock";
 
 export interface AgentMessages {
   systemInstruction: string;
@@ -50,14 +50,20 @@ export interface AgentMessages {
 
 const GEMINI_MODEL = cleanKey(process.env.GEMINI_MODEL) || "gemini-2.5-flash";
 const GROQ_MODEL = cleanKey(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile";
+// OpenAI-compatible open-source provider. Defaults to OpenRouter; override
+// OPENROUTER_BASE_URL for Together / Fireworks / a local server, OPENROUTER_MODEL
+// for any open model. Activates only when OPENROUTER_API_KEY is set.
+const OPENROUTER_MODEL = cleanKey(process.env.OPENROUTER_MODEL) || "meta-llama/llama-3.3-70b-instruct";
+const OPENROUTER_BASE_URL = cleanKey(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1";
 
 export function resolveProvider(): Provider {
   const forced = (process.env.LLM_PROVIDER || "").toLowerCase().trim();
-  if (forced === "gemini" || forced === "groq" || forced === "mock") {
+  if (forced === "gemini" || forced === "groq" || forced === "openrouter" || forced === "mock") {
     return forced;
   }
   if (cleanKey(process.env.GEMINI_API_KEY)) return "gemini";
   if (cleanKey(process.env.GROQ_API_KEY)) return "groq";
+  if (cleanKey(process.env.OPENROUTER_API_KEY)) return "openrouter";
   return "mock";
 }
 
@@ -65,7 +71,13 @@ export function resolveProvider(): Provider {
 export function providerInfo(): { provider: Provider; model: string; search: boolean } {
   const provider = resolveProvider();
   const model =
-    provider === "gemini" ? GEMINI_MODEL : provider === "groq" ? GROQ_MODEL : "demo-mock";
+    provider === "gemini"
+      ? GEMINI_MODEL
+      : provider === "groq"
+      ? GROQ_MODEL
+      : provider === "openrouter"
+      ? OPENROUTER_MODEL
+      : "demo-mock";
   return { provider, model, search: provider !== "mock" };
 }
 
@@ -307,6 +319,9 @@ export async function runAgentStream(
   if (provider === "groq") {
     return runGroq(step, body, cb);
   }
+  if (provider === "openrouter") {
+    return runOpenRouter(step, body, cb);
+  }
   return runGemini(step, body, cb);
 }
 
@@ -427,6 +442,70 @@ async function runGroq(step: string, body: AgentBody, cb: StreamCallbacks): Prom
   }
 }
 
+async function runOpenRouter(step: string, body: AgentBody, cb: StreamCallbacks): Promise<void> {
+  const apiKey = cleanKey(process.env.OPENROUTER_API_KEY);
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is missing.");
+
+  const { systemInstruction, userPrompt } = buildAgentMessages(step, body);
+
+  // No native grounding, so the Evidence step gets a real DuckDuckGo search
+  // injected and those URLs become the cited sources (same as the Groq path).
+  let finalUser = userPrompt;
+  if (step === "2") {
+    const query = `${body.category || ""} ${body.situation || ""}`.trim().slice(0, 300);
+    const results = await webSearch(query, 5);
+    if (results.length) {
+      finalUser = `${userPrompt}\n\n# Live web search results (ground your findings in these and cite them):\n${formatSearchResults(results)}`;
+      if (cb.onSources) cb.onSources(results.map((r) => ({ title: r.title, url: r.url })));
+    }
+  }
+
+  const resp = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://civictas.vercel.app",
+      "X-Title": "CIVICTAS",
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      temperature: 0.2,
+      stream: true,
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: finalUser },
+      ],
+    }),
+  });
+
+  if (!resp.ok || !resp.body) {
+    const errText = await safeText(resp);
+    throw new Error(`OpenRouter API error (${resp.status}): ${errText.slice(0, 200)}`);
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for await (const part of resp.body as unknown as AsyncIterable<Uint8Array>) {
+    buffer += decoder.decode(part, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === "[DONE]") return;
+      try {
+        const json = JSON.parse(data);
+        const delta = json.choices?.[0]?.delta?.content;
+        if (delta) cb.onText(delta);
+      } catch {
+        // Partial JSON across chunk boundary — ignore.
+      }
+    }
+  }
+}
+
 /**
  * Non-streaming single completion for structured tasks (e.g. the persona
  * council). Returns the full text. Mock provider returns "" so callers supply
@@ -451,6 +530,30 @@ export async function complete(system: string, user: string, temperature = 0.3):
       }),
     });
     if (!resp.ok) throw new Error(`Groq API error (${resp.status}): ${(await safeText(resp)).slice(0, 200)}`);
+    const json: any = await resp.json();
+    return json.choices?.[0]?.message?.content || "";
+  }
+
+  if (provider === "openrouter") {
+    const apiKey = cleanKey(process.env.OPENROUTER_API_KEY);
+    const resp = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://civictas.vercel.app",
+        "X-Title": "CIVICTAS",
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        temperature,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
+    });
+    if (!resp.ok) throw new Error(`OpenRouter API error (${resp.status}): ${(await safeText(resp)).slice(0, 200)}`);
     const json: any = await resp.json();
     return json.choices?.[0]?.message?.content || "";
   }
