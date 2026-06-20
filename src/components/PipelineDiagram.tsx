@@ -191,7 +191,8 @@ export default function PipelineDiagram({ className = "" }: { className?: string
         {STAGES.map((stage, i) => (
           <div
             key={stage.no}
-            className="flex flex-col lg:flex-row lg:items-stretch lg:flex-1 lg:min-w-0"
+            className="flex flex-col lg:flex-row lg:items-stretch lg:flex-1 lg:min-w-0 animate-stage-rise"
+            style={{ animationDelay: `${i * 90}ms` }}
           >
             <StageCard stage={stage} />
             {i < STAGES.length - 1 && <Connector />}
