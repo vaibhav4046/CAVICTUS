@@ -526,12 +526,12 @@ Archived using CIVICTAS Workspace Connector.
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-ink tracking-tight font-display">Google Workspace Connect</h3>
-              <span className="text-[9px] uppercase font-mono tracking-wider bg-accent/10 border border-accent/20 text-accent font-bold px-2 py-0.5 rounded-full">
-                Native
+              <span className="text-[9px] uppercase font-mono tracking-wider bg-warning/10 border border-warning/25 text-warning font-bold px-2 py-0.5 rounded-full">
+                Prototype
               </span>
             </div>
             <p className="text-xs text-muted font-medium leading-normal mt-0.5">
-              Sync decisions, plan calendar hearings, and archive briefings with Workspace APIs
+              Optional prototype integration — not required for the demo
             </p>
           </div>
         </div>
@@ -563,6 +563,11 @@ Archived using CIVICTAS Workspace Connector.
               </div>
               <p className="text-xs text-muted leading-relaxed font-medium">
                 Sign in to push the finished brief to Gmail, Sheets, Calendar, Drive, Tasks, Chat, and Meet — or paste a sandbox token. The decision studio runs fully without connecting.
+              </p>
+              <p className="text-[11px] text-faint leading-relaxed">
+                Security note: this is a prototype connector using a browser OAuth demo flow. A production
+                deployment would use the PKCE authorization-code flow with least-privilege scopes and a
+                server-side token exchange. Not part of the core demo path.
               </p>
             </div>
 

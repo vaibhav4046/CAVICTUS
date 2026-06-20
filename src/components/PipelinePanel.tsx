@@ -242,12 +242,14 @@ export default function PipelinePanel(props: PipelinePanelProps) {
             ))}
           </ol>
         </div>
-      ) : hasSourcesSection ? (
+      ) : (
+        // Always honest on the Evidence step: if grounding returned no citations,
+        // say so explicitly rather than implying the run was web-backed.
         <p className="mt-4 text-sm text-muted italic leading-relaxed flex items-center gap-1.5">
           <BookMarked className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-          No external sources — benchmark estimates used
+          No external citations returned for this run — reasoning over labeled public benchmarks.
         </p>
-      ) : null
+      )
     ) : null;
 
     return (

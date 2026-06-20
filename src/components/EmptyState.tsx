@@ -32,18 +32,25 @@ export default function EmptyState({ onRunSample }: EmptyStateProps) {
       </h2>
 
       <p className="max-w-md text-sm text-muted leading-relaxed mb-8">
-        CIVICTAS runs five specialized AI agents — framing, evidence, simulation, equity audit, and a
-        plain-language brief — then hands the decision to a human. Press the button to watch the seeded
-        Riverside cooling-center decision unfold, or edit the setup panel above to run your own.
+        Watch five specialized AI agents — framing, evidence, simulation, equity audit, and a
+        plain-language brief — work the seeded Riverside cooling-center decision live, then hand it to a
+        human gate. Best first run for a 3-minute look.
       </p>
 
       <button
         onClick={onRunSample}
-        className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 font-bold text-sm px-6 py-3 rounded-xl shadow-sm transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 font-bold text-sm px-7 py-3.5 rounded-xl shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         <Play className="w-4 h-4 fill-current" aria-hidden="true" />
-        Run the sample decision
+        Run the Riverside heat decision
       </button>
+
+      <a
+        href="#zone-inputs-h"
+        className="mt-3 text-xs font-semibold text-muted hover:text-ink transition-colors rounded-md px-2 py-1 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+      >
+        Configure another scenario
+      </a>
 
       <div className="mt-10 flex items-center gap-2 text-xs text-faint font-semibold">
         <FileBox className="w-4 h-4" aria-hidden="true" />

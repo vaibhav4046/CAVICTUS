@@ -30,6 +30,9 @@ interface SetupPanelProps {
     situation: string;
     constraints: DecisionConstraints;
   } | null;
+  /** When true (cold/empty studio), the one-click sample is the primary CTA, so
+   *  this form's submit renders as a quieter secondary "custom setup" action. */
+  secondaryCta?: boolean;
 }
 
 const REQUIRED = (
@@ -227,16 +230,23 @@ export default function SetupPanel(props: SetupPanelProps) {
           </div>
         </div>
 
-        {/* Primary action */}
+        {/* Run action. In cold/empty state the one-click sample below is the single
+            primary CTA, so this renders as a quieter secondary "custom setup" run. */}
         {!isLocked && (
           <div className="pt-2">
             <button
               id="submit-pipeline-btn"
               type="submit"
-              className="w-full py-3.5 px-6 bg-accent text-on-accent hover:opacity-90 active:scale-[0.99] font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className={
+                props.secondaryCta
+                  ? "w-full py-3 px-6 bg-surface-2 text-ink border border-border-strong hover:bg-surface active:scale-[0.99] font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  : "w-full py-3.5 px-6 bg-accent text-on-accent hover:opacity-90 active:scale-[0.99] font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              }
             >
               <Play className="w-4 h-4 fill-current" aria-hidden="true" />
-              Analyze decision &amp; launch the advisory pipeline
+              {props.secondaryCta
+                ? "Analyze this custom setup"
+                : "Analyze decision & launch the advisory pipeline"}
             </button>
           </div>
         )}

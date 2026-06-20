@@ -19,7 +19,7 @@ import RealityPill from "./components/RealityPill";
 import PipelineErrorAlert from "./components/PipelineErrorAlert";
 import DecisionRecord from "./components/DecisionRecord";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
-import { downloadDecisionBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
+import { downloadDecisionBrief, downloadTextBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
 import { decodeRecord, encodeRecord, buildShareUrl, RECORD_PARAM, DecisionSource } from "./share";
 import { useConfirm, useNotify } from "./dialog";
 import { validateStep, extractRecommendedOption, recommendationIsFramed } from "../lib/extract";
@@ -1082,8 +1082,7 @@ export default function App() {
    */
   const triggerDownloadBrief = () => {
     const activeConfidence = getConfidencePill(agentStates[5].output) || "High";
-    
-    downloadDecisionBrief({
+    const details = {
       category,
       situation,
       budget,
@@ -1102,8 +1101,21 @@ export default function App() {
         step3: agentStates[3].output,
         step4: agentStates[4].output,
         step5: agentStates[5].output,
-      }
-    });
+      },
+    };
+    // jsPDF uses Function() internally, which the strict production CSP blocks.
+    // If the PDF path throws, fall back to a plain-text brief so the export button
+    // never appears broken to a judge.
+    try {
+      downloadDecisionBrief(details);
+    } catch (e) {
+      console.warn("PDF export unavailable (likely CSP) — falling back to text brief:", e);
+      downloadTextBrief(details);
+      notify({
+        tone: "info",
+        message: "Exported as a text brief (PDF is disabled under the strict security policy).",
+      });
+    }
   };
 
   // Extract recommended choice headline from Agent 5 text. Single source of truth
@@ -1134,6 +1146,7 @@ export default function App() {
         step3: agentStates[3].output,
         step4: agentStates[4].output,
       },
+      demoMode: ranInDemo,
     };
 
     const result = encodeRecord(source);
@@ -1406,6 +1419,7 @@ export default function App() {
                 onRunPipeline={handleRunPipeline}
                 onReset={handleResetWorkflow}
                 loadedTemplate={loadedTemplate}
+                secondaryCta={!isPipelineRunning && !isPipelineDone && !selectedItemId && !pipelineError}
               />
               {!isPipelineRunning && !isPipelineDone && !selectedItemId && !pipelineError && (
                 <EmptyState onRunSample={handleRunSample} />

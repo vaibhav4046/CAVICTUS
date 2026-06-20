@@ -143,6 +143,15 @@ export default function DecisionRecord({ record, encoded }: DecisionRecordProps)
             <div className="flex items-center gap-2 flex-wrap">
               <ProvenanceLine />
               <span className="text-[11px] font-mono text-muted">{formatDate(record.createdAt)}</span>
+              {record.demoMode && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/25"
+                  title="This decision's AI run used the deterministic demo (canned, labeled), not live AI."
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning" aria-hidden="true" />
+                  Demo snapshot
+                </span>
+              )}
             </div>
             <h1 className="font-display text-2xl md:text-3xl font-semibold tracking-tight text-ink break-words">
               {record.category || "Community decision"}

@@ -52,18 +52,17 @@ export default function Landing({ onEnter, onTour, engine }: LandingProps) {
             homework. A human makes the call.
           </p>
 
-          <div className="mt-8 flex items-baseline gap-3 justify-center flex-wrap">
-            <span className="font-display font-bold text-ink text-4xl md:text-5xl tabular-nums leading-none">
-              32–51%
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-line px-3 py-1.5 text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" /> 5 AI agents + 108-voice council
             </span>
-            <span className="text-sm text-muted text-left max-w-xs leading-snug">
-              estimated share of cooling centers within walking distance of the most heat-vulnerable
-              residents in many cities. CIVICTAS makes that gap visible.
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-line px-3 py-1.5 text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-positive" aria-hidden="true" /> live review in under a minute
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-line px-3 py-1.5 text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning" aria-hidden="true" /> approval locked until rationale + 3 checks
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-faint font-mono">
-            est. — CDC Heat &amp; Health Tracker / EPA heat-equity research
-          </p>
 
           <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
             <button
@@ -103,12 +102,13 @@ export default function Landing({ onEnter, onTour, engine }: LandingProps) {
         {/* Positioning + scope (problem-understanding signal) */}
         <div className="mt-12 w-full max-w-2xl text-left bg-surface border border-border-line rounded-2xl p-5 shadow-sm">
           <p className="text-xs text-muted leading-relaxed">
-            <strong className="text-ink">Why it matters:</strong> in many cities a large share of
-            cooling centers sit beyond walking distance of the most heat-vulnerable residents — the
-            "optimize for the most people" default quietly routes help away from those who need it
-            most. CIVICTAS is a per-decision advising layer that sits between deliberation
-            tools (Polis, Decidim) and policy simulators (PolicyEngine): it advises, audits equity,
-            and forces an accountable human sign-off.
+            <strong className="text-ink">Why it matters:</strong> published heat-equity research
+            estimates only ~32–51% of cooling centers sit within walking distance of the most
+            heat-vulnerable residents <span className="text-faint">(est., CDC Heat &amp; Health Tracker / EPA)</span> —
+            the "optimize for the most people" default quietly routes help away from those who need it
+            most. CIVICTAS is a per-decision advising layer that sits between deliberation tools
+            (Polis, Decidim) and policy simulators (PolicyEngine): it advises, audits equity, and
+            forces an accountable human sign-off.
           </p>
           <p className="text-[11px] text-faint leading-relaxed mt-3">
             <strong className="text-ink">Scope:</strong> resource-siting and allocation decisions

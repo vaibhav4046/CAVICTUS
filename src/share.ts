@@ -68,6 +68,8 @@ export interface SharedRecord {
   agentLog?: SharedAgentLog;
   /** True when verbose AI detail was dropped to fit the link length budget. */
   trimmed?: boolean;
+  /** True if this decision's AI run used the deterministic demo, not live AI. */
+  demoMode?: boolean;
 }
 
 /** Everything the caller knows about a finalized decision, before length budgeting. */
@@ -84,6 +86,8 @@ export interface DecisionSource {
   checks: SharedChecks;
   aiBrief: string;
   agentLog: SharedAgentLog;
+  /** True if this decision's AI run used the deterministic demo, not live AI. */
+  demoMode: boolean;
 }
 
 export interface EncodeResult {
@@ -137,6 +141,7 @@ function baseRecord(src: DecisionSource): SharedRecord {
       equity: !!src.checks.equity,
       community: !!src.checks.community,
     },
+    demoMode: !!src.demoMode,
   };
 }
 
@@ -278,5 +283,6 @@ export function decodeRecord(param: string | null | undefined): SharedRecord | n
     aiBrief: aiBrief || undefined,
     agentLog,
     trimmed: bool(parsed.trimmed),
+    demoMode: bool(parsed.demoMode),
   };
 }

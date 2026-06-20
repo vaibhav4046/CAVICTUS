@@ -15,6 +15,7 @@ function sampleSource(overrides: Partial<DecisionSource> = {}): DecisionSource {
     checks: { dataGaps: true, equity: true, community: false },
     aiBrief: "A short plain-language brief.",
     agentLog: { step1: "framing", step2: "evidence", step3: "projections", step4: "audit" },
+    demoMode: false,
     ...overrides,
   };
 }
@@ -54,6 +55,13 @@ describe("share record encode/decode", () => {
     expect(decodeRecord("")).toBeNull();
     expect(decodeRecord("not valid base64!!!")).toBeNull();
     expect(decodeRecord("////")).toBeNull();
+  });
+
+  it("round-trips the demo-mode flag so a shared record never hides that it was a demo run", () => {
+    const liveDecoded = decodeRecord(encodeRecord(sampleSource({ demoMode: false }))!.encoded);
+    expect(liveDecoded!.demoMode).toBe(false);
+    const demoDecoded = decodeRecord(encodeRecord(sampleSource({ demoMode: true }))!.encoded);
+    expect(demoDecoded!.demoMode).toBe(true);
   });
 
   it("rejects a payload missing the required core fields", () => {
