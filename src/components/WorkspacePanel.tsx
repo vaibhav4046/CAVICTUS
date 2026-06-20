@@ -184,7 +184,7 @@ export default function WorkspacePanel(props: WorkspacePanelProps) {
       setTaskNotes(`Review Agent 4 risk mitigation audit checks.\n\nRequired Verification: ${props.equityGoal}`);
 
       // Google Chat notification
-      setChatMsgText(`🚨 *CIVICTAS Policy Proposal Alert* 🚨\nA human decision maker has processed and logged a policy proposal concerning: *${props.category}*.\n\n*Action Decision:* ${props.humanDecision.toUpperCase()}\n*Allocated Option:* ${props.chosenOption || "Vulnerability-Weighted Center Plan"}\n*Budget:* $${props.budget}\n*Oversight Rationale:* ${props.humanRationale || "Prioritized communities with least transit option."}`);
+      setChatMsgText(`*CIVICTAS Policy Proposal Alert*\nA human decision maker has processed and logged a policy proposal concerning: *${props.category}*.\n\n*Action Decision:* ${props.humanDecision.toUpperCase()}\n*Allocated Option:* ${props.chosenOption || "Vulnerability-Weighted Center Plan"}\n*Budget:* $${props.budget}\n*Oversight Rationale:* ${props.humanRationale || "Prioritized communities with least transit option."}`);
     }
   }, [props.isPipelineDone, props.category, props.chosenOption, props.humanDecision, props.humanRationale]);
 
@@ -614,10 +614,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-gmail-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-red-500" />
+                  <Mail className="w-4 h-4 text-agent-framing" />
                   <span className="text-xs font-bold text-ink font-display">1. Gmail Dispatcher</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-red-500/10 text-red-500 font-bold px-1.5 py-0.5 rounded border border-red-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-agent-framing/10 text-agent-framing font-bold px-1.5 py-0.5 rounded border border-agent-framing/20">
                   Ready
                 </span>
               </div>
@@ -642,7 +642,7 @@ Archived using CIVICTAS Workspace Connector.
                     type="text"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
-                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent font-bold text-ink bg-surface-solid dark:bg-[#121620]"
+                    className="border border-border-line text-xs p-2 rounded-lg w-full outline-none focus:border-accent font-bold text-ink bg-surface-2"
                   />
                 </div>
 
@@ -683,10 +683,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-sheets-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-emerald-500" />
+                  <Database className="w-4 h-4 text-agent-evidence" />
                   <span className="text-xs font-bold text-ink font-display">2. Google Sheets simulation export</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-emerald-500/10 text-emerald-500 font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-agent-evidence/10 text-agent-evidence font-bold px-1.5 py-0.5 rounded border border-agent-evidence/20">
                   Ready
                 </span>
               </div>
@@ -744,10 +744,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-calendar-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-500" />
+                  <Calendar className="w-4 h-4 text-agent-simulation" />
                   <span className="text-xs font-bold text-ink font-display">3. Calendar & Meet Consultation</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-blue-500/10 text-blue-500 font-bold px-1.5 py-0.5 rounded border border-blue-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-agent-simulation/10 text-agent-simulation font-bold px-1.5 py-0.5 rounded border border-agent-simulation/20">
                   Ready
                 </span>
               </div>
@@ -807,7 +807,7 @@ Archived using CIVICTAS Workspace Connector.
                     className="w-4 h-4 text-accent accent-accent focus:ring-accent rounded shrink-0 cursor-pointer"
                   />
                   <label htmlFor="auto-meet-conferencing" className="text-[10.5px] text-ink font-semibold select-none cursor-pointer flex items-center gap-1 leading-normal">
-                    <Video className="w-4 h-4 text-sky-500 shrink-0" />
+                    <Video className="w-4 h-4 text-accent-2 shrink-0" />
                     Auto-configure Google Meet conference endpoint link
                   </label>
                 </div>
@@ -848,10 +848,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-drive-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-yellow-500" />
+                  <HardDrive className="w-4 h-4 text-agent-equity" />
                   <span className="text-xs font-bold text-ink font-display">4. Drive secure document archival</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-yellow-500/10 text-yellow-500 font-bold px-1.5 py-0.5 rounded border border-yellow-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-agent-equity/10 text-agent-equity font-bold px-1.5 py-0.5 rounded border border-agent-equity/20">
                   Ready
                 </span>
               </div>
@@ -908,10 +908,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-tasks-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-indigo-500" />
+                  <CheckSquare className="w-4 h-4 text-agent-transparency" />
                   <span className="text-xs font-bold text-ink font-display">5. Tasks checklist sync</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-indigo-500/10 text-indigo-500 font-bold px-1.5 py-0.5 rounded border border-indigo-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-agent-transparency/10 text-agent-transparency font-bold px-1.5 py-0.5 rounded border border-agent-transparency/20">
                   Ready
                 </span>
               </div>
@@ -965,10 +965,10 @@ Archived using CIVICTAS Workspace Connector.
             <div className="p-5 border border-border-line rounded-xl space-y-3 bg-surface-2/50" id="gsuite-chat-box">
               <div className="flex items-center justify-between border-b border-border-line pb-2">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-sky-500" />
+                  <MessageSquare className="w-4 h-4 text-accent" />
                   <span className="text-xs font-bold text-ink font-display">6. Chat spaces notifications</span>
                 </div>
-                <span className="text-[9px] uppercase font-mono tracking-wider bg-sky-500/10 text-sky-500 font-bold px-1.5 py-0.5 rounded border border-sky-500/20">
+                <span className="text-[9px] uppercase font-mono tracking-wider bg-accent/10 text-accent font-bold px-1.5 py-0.5 rounded border border-accent/20">
                   Ready
                 </span>
               </div>

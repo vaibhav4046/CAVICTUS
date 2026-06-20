@@ -341,3 +341,29 @@ notes where they deviate from §7 so implementation stays token-true.
 > After you (the human) import the generated design, hand it back and I will
 > implement it against the existing React/Vite/Tailwind token system, screen by
 > screen, verifying light+dark, accessibility, and zero mobile overflow.
+
+---
+
+## 12. Vision / roadmap (honest future work — NOT yet built)
+
+These were requested and are real product directions, but each needs integrations
+/ accounts / ML that cannot be built honestly in a hackathon window. Listed so the
+ambition is on record and not faked in the demo.
+
+- **Personalization (shipped, v1):** onboarding now captures role + priority and
+  feeds them into every agent prompt (`preferences`). Future: learn from past
+  decisions, editable profile, per-org defaults.
+- **Meeting capture + multi-speaker analysis (future):** record a meeting,
+  diarize speakers, transcribe, and surface the decision + dissent automatically.
+  Needs audio capture + speaker diarization + transcription (real ML/cloud) and
+  consent/recording-law handling. Not a one-night build; do not demo as live.
+- **Passive decision capture from email / chat (future):** ingest Gmail / Slack /
+  WhatsApp threads and detect decisions made outside the tool. Needs OAuth, per-
+  provider APIs, storage, and a privacy/consent model. Conflicts with the current
+  zero-accounts demo; would be an opt-in connected mode.
+- **Notion / GitHub context (future):** read project docs / issues as decision
+  context, and write the decision record back. Needs OAuth + sync; scope as an
+  optional integration layer, never required for the core flow.
+- **Hard rule for all of the above:** ship only when it actually works; label
+  reality (Live / Mock / Simulated); never present a non-functional integration as
+  real. Honesty stays the product's defining feature.
