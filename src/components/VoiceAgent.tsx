@@ -141,35 +141,37 @@ export default function VoiceAgent({ proposal, onCapture }: VoiceAgentProps) {
             {!listening ? (
               <button
                 onClick={briefAndListen}
-                className="inline-flex items-center gap-2 bg-accent text-white hover:opacity-90 font-semibold text-xs px-4 py-2.5 rounded-full transition-all"
+                aria-label="Brief me and listen"
+                className="inline-flex items-center gap-2 bg-accent text-on-accent hover:opacity-90 font-semibold text-xs px-4 py-2.5 rounded-full transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                <Mic className="w-4 h-4" />
+                <Mic className="w-4 h-4" aria-hidden="true" />
                 Brief me & listen
               </button>
             ) : (
               <button
                 onClick={stop}
-                className="inline-flex items-center gap-2 bg-rose-500 text-white hover:opacity-90 font-semibold text-xs px-4 py-2.5 rounded-full transition-all"
+                aria-label="Stop recording"
+                className="inline-flex items-center gap-2 bg-danger text-white hover:opacity-90 font-semibold text-xs px-4 py-2.5 rounded-full transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                <Square className="w-3.5 h-3.5 fill-current" />
+                <Square className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
                 Stop
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
               </button>
             )}
           </div>
 
           {transcript && (
-            <div className="p-3 rounded-xl bg-surface border border-border-line">
+            <div className="p-3 rounded-xl bg-surface border border-border-line" role="status" aria-live="polite">
               <span className="text-[10px] font-bold text-muted uppercase tracking-wider">You said</span>
               <p className="text-xs text-ink mt-1 leading-relaxed">{transcript}</p>
               {decision && (
                 <span
                   className={`inline-block mt-2 text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
                     decision === "rejected"
-                      ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                      ? "bg-danger/10 text-danger border-danger/20"
                       : decision === "approved_with_edits"
-                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                      : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      ? "bg-warning/10 text-warning border-warning/20"
+                      : "bg-positive/10 text-positive border-positive/20"
                   }`}
                 >
                   detected: {decision.replace(/_/g, " ")} — confirm in the form above

@@ -101,6 +101,10 @@ async function startServer() {
 
   // API Route for sending notifications
   app.post("/api/notify", async (req, res) => {
+    if (!checkSecret(req)) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
     const webhookUrl = process.env.NOTIFY_WEBHOOK;
     if (!webhookUrl) {
       return res.json({ success: true, simulated: true, message: "Simulated notification triggered successfully." });

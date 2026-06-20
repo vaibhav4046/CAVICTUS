@@ -311,7 +311,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
             {/* Rationale description input */}
             <div className="space-y-1.5">
               <label htmlFor="rationale-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
-                Human Rationale & Policy Justification <span className="text-rose-500 font-bold">*</span>
+                Human Rationale & Policy Justification <span className="text-danger font-bold">*</span>
               </label>
               <textarea
                 id="rationale-input"
@@ -328,7 +328,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
             {/* Demonstrably-reasoned engagement — not just "human present" */}
             <div className="space-y-1.5">
               <label htmlFor="reasoned-input" className="block text-xs font-bold text-muted uppercase tracking-wide">
-                Reasoned engagement <span className="text-rose-500 font-bold">*</span>
+                Reasoned engagement <span className="text-danger font-bold">*</span>
               </label>
               <textarea
                 id="reasoned-input"

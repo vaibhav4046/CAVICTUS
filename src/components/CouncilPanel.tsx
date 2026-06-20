@@ -156,7 +156,7 @@ export default function CouncilPanel(props: CouncilPanelProps) {
               <div className="space-y-1.5">
                 {result.dissents.map((d, i) => (
                   <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-surface-2 border border-border-line">
-                    <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 mt-0.5 ${verdictChip(d.verdict)}`}>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 mt-0.5 ${verdictChip(d.verdict)}`}>
                       {d.verdict.replace(/_/g, " ")}
                     </span>
                     <div className="min-w-0">

@@ -58,7 +58,7 @@
   --color-raw-ink: #ECEEF4;
   --color-raw-ink-soft: #C9CDD9;
   --color-raw-muted: #9DA3B5;          /* ≥4.5:1 on #14161F */
-  --color-raw-faint: #6E7488;
+  --color-raw-faint: #8A93AB;          /* raised for AA on small text (was #6E7488) */
   --color-raw-border-line: #272B39;
   --color-raw-border-strong: #383D4F;
   --color-raw-accent: #818CF8;         /* bright indigo pops on dark */
