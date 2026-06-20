@@ -145,9 +145,35 @@ Proven loop: **audit (workflow) → fix (you, sequential) → tsc+build → brow
   web-grounding overclaims, modal + drawer focus traps, live-region spam, voice/gate
   a11y + token colors, faint contrast, chip legibility, token-on-disconnect,
   health method guard.
-- **External score was ~6.2;** code-quality now A-band after fixes. A 4th "road to
-  10" judge audit was started but **failed on the session limit** — re-run it after
-  ~8am London (script: `.../workflows/scripts/civictas-road-to-10-*.js`).
+- **Session 2026-06-20 (cont.) — honesty + substance + test pass. Judge re-audit
+  now 7.4/10 (was 5.8 at the start of this pass), all 4 BLOCKERs confirmed closed,
+  no regressions.** Shipped + deployed:
+  - Accessible **dialog primitive** (`src/dialog.tsx` + `ConfirmDialog.tsx`):
+    replaced all 11 native `confirm()`/`alert()`. **OAuth `state` CSRF** guard +
+    token → `sessionStorage` (both `api/auth/callback.ts` and `server.ts`).
+  - **Honesty BLOCKERs:** engine pill no longer claims green "Live" from key
+    existence — gated on a real `hasLiveSuccess` (App.tsx) + Landing shows
+    "Ready"/"Mock" (new RealityPill `ready` kind). `[METADATA_JSON]`/`[MEMORY_NOTE]`
+    stripped before commit (`cleanAgentOutput`) so they can't leak to PDF/ledger/
+    share. Simulation prompt no longer orders fabricated per-cell numbers
+    (`lib/agents.ts`). Harness "Valid./pass" → honest "Output/ok". Council fallback
+    on live-failure now labeled `mock`/`demo-mock`, never the live provider.
+  - **Substance:** council now deliberates over the REAL evidence/projections/audit
+    (threaded App → CouncilPanel → api/council + server.ts → `runCouncil`); footer
+    states it's one model estimating a 108-roster, "not 108 independent agents".
+  - **Tests (NEW):** `npm test` (vitest) — 15 passing over ledger hash-chain,
+    share encode/decode (defensive), and council roster/normalization.
+  - **Polish:** 32–51% value stat on landing w/ attribution; WorkspacePanel
+    `text-on-accent` + solid surfaces; AWAITING badge sustained-pulse removed;
+    modal close >=24px; sidebar `aria-current`; indigo theme-color/favicon +
+    twitter:card.
+- **Remaining (deferred, NOT blockers — see re-audit):** mock council dissents are
+  cooling-center-specific, so a non-heat demo scenario shows mismatched (but
+  demo-labeled) council output; WorkspacePanel email-body HTML interpolation
+  (self-targeted, user-editable, low real risk); a few small a11y MEDIUMs (M12
+  deep-link reviewer hardcode, M13 progress-nav todo aria, M14 landing skip-link,
+  M16 returning-visitor landing bypass). Audit scripts:
+  `.../workflows/scripts/civictas-audit-v2-*.js` and `civictas-audit-v3-confirm-*.js`.
 
 ---
 
