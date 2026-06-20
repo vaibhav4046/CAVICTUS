@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* ────────────────────────────────────────────────────────────────────────
@@ -16,71 +16,73 @@
    ──────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light — warm paper, white cards, hairline borders, real shadow depth */
-  --color-raw-bg: #FAFAF8;
+  /* "Civic Signal" — Light. Cool civic paper, white cards, indigo signal
+     primary, warm amber reserved for the human-decision moments. */
+  --color-raw-bg: #F5F6FB;
   --color-raw-surface: #FFFFFF;
   --color-raw-surface-solid: #FFFFFF;
-  --color-raw-surface-2: #F4F5F2;
-  --color-raw-ink: #16181D;
-  --color-raw-ink-soft: #2C313B;
-  --color-raw-muted: #586172;          /* ≥4.5:1 on white and on paper */
-  --color-raw-faint: #767C8A;          /* large/secondary text only, ≈4.7:1 */
-  --color-raw-border-line: #E5E7E2;
-  --color-raw-border-strong: #D2D6CF;
-  --color-raw-accent: #0F766E;         /* civic teal, ≥4.5:1 on white */
-  --color-raw-accent-2: #0E7490;
-  --color-raw-accent-soft: #E6F2F0;    /* tinted fill behind accent icons */
+  --color-raw-surface-2: #EDEFF7;
+  --color-raw-ink: #11131C;
+  --color-raw-ink-soft: #2A2E3D;
+  --color-raw-muted: #545A6E;          /* ≥4.5:1 on white and on paper */
+  --color-raw-faint: #737994;          /* large/secondary text only, ≈4.7:1 */
+  --color-raw-border-line: #E2E5F0;
+  --color-raw-border-strong: #CBD0E2;
+  --color-raw-accent: #4338CA;         /* civic indigo, ≈6.6:1 on white */
+  --color-raw-accent-2: #7C3AED;       /* violet secondary */
+  --color-raw-accent-soft: #EBEBFE;    /* indigo tint behind accent icons */
   --color-raw-on-accent: #FFFFFF;
   --color-raw-positive: #047857;
   --color-raw-warning: #B45309;
   --color-raw-danger: #BE123C;
 
-  /* Five pipeline stages — one cohesive cool ramp (teal → indigo → violet).
-     Analogous, not rainbow: reads as one system in five stages. */
-  --color-raw-agent-framing: #0F766E;
-  --color-raw-agent-evidence: #0E7490;
-  --color-raw-agent-simulation: #0369A1;
-  --color-raw-agent-equity: #4338CA;
-  --color-raw-agent-transparency: #6D28D9;
+  /* Five pipeline stages — cohesive cool→signal ramp (indigo → blue → cyan →
+     violet → fuchsia). Analogous, not rainbow: reads as one system. */
+  --color-raw-agent-framing: #4338CA;
+  --color-raw-agent-evidence: #2563EB;
+  --color-raw-agent-simulation: #0E7490;
+  --color-raw-agent-equity: #7C3AED;
+  --color-raw-agent-transparency: #A21CAF;
 
-  --shadow-color-1: rgba(16, 24, 40, 0.05);
-  --shadow-color-2: rgba(16, 24, 40, 0.08);
+  --shadow-color-1: rgba(17, 19, 40, 0.06);
+  --shadow-color-2: rgba(17, 19, 40, 0.10);
 }
 
 .dark {
-  /* Dark — deep ink page, SOLID elevated surfaces, visible (not 8%) borders */
-  --color-raw-bg: #0A0C10;
-  --color-raw-surface: #13161D;        /* solid — was translucent, the drift source */
-  --color-raw-surface-solid: #13161D;
-  --color-raw-surface-2: #1A1E27;
-  --color-raw-ink: #E8EAED;
-  --color-raw-ink-soft: #C6CAD2;
-  --color-raw-muted: #9AA2B0;          /* ≥4.5:1 on #13161D */
-  --color-raw-faint: #6B7280;
-  --color-raw-border-line: #262B34;
-  --color-raw-border-strong: #353B46;
-  --color-raw-accent: #2DD4BF;         /* bright teal pops on dark */
-  --color-raw-accent-2: #38BDF8;
-  --color-raw-accent-soft: #0E2A2A;
-  --color-raw-on-accent: #03201D;
+  /* "Civic Signal" — Dark. Deep indigo-navy page, SOLID elevated surfaces,
+     bright periwinkle-indigo primary. Borders visible, not 8%. */
+  --color-raw-bg: #090A12;
+  --color-raw-surface: #14161F;        /* solid — depth from contrast, not blur */
+  --color-raw-surface-solid: #14161F;
+  --color-raw-surface-2: #1C1F2B;
+  --color-raw-ink: #ECEEF4;
+  --color-raw-ink-soft: #C9CDD9;
+  --color-raw-muted: #9DA3B5;          /* ≥4.5:1 on #14161F */
+  --color-raw-faint: #6E7488;
+  --color-raw-border-line: #272B39;
+  --color-raw-border-strong: #383D4F;
+  --color-raw-accent: #818CF8;         /* bright indigo pops on dark */
+  --color-raw-accent-2: #C4B5FD;
+  --color-raw-accent-soft: #1E1B4B;
+  --color-raw-on-accent: #0A0B1A;
   --color-raw-positive: #34D399;
   --color-raw-warning: #FBBF24;
   --color-raw-danger: #FB7185;
 
   /* Brightened in dark for ≥4.5:1 on the dark surface (AA) */
-  --color-raw-agent-framing: #2DD4BF;
-  --color-raw-agent-evidence: #38BDF8;
-  --color-raw-agent-simulation: #60A5FA;
-  --color-raw-agent-equity: #818CF8;
-  --color-raw-agent-transparency: #A78BFA;
+  --color-raw-agent-framing: #818CF8;
+  --color-raw-agent-evidence: #60A5FA;
+  --color-raw-agent-simulation: #22D3EE;
+  --color-raw-agent-equity: #C4B5FD;
+  --color-raw-agent-transparency: #E879F9;
 
-  --shadow-color-1: rgba(0, 0, 0, 0.40);
-  --shadow-color-2: rgba(0, 0, 0, 0.55);
+  --shadow-color-1: rgba(0, 0, 0, 0.45);
+  --shadow-color-2: rgba(0, 0, 0, 0.60);
 }
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-bg: var(--color-raw-bg);
@@ -124,10 +126,10 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Editorial display headings: optical sizing + tight tracking */
+  /* Bold grotesque display headings: optical sizing + tight tracking */
   .font-display {
     font-optical-sizing: auto;
-    letter-spacing: -0.018em;
+    letter-spacing: -0.022em;
   }
 
   input, select, textarea {
