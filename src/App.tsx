@@ -17,8 +17,10 @@ import VoiceAgent from "./components/VoiceAgent";
 import LedgerPanel from "./components/LedgerPanel";
 import RealityPill from "./components/RealityPill";
 import PipelineErrorAlert from "./components/PipelineErrorAlert";
+import DecisionRecord from "./components/DecisionRecord";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
 import { downloadDecisionBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
+import { decodeRecord, encodeRecord, buildShareUrl, RECORD_PARAM, DecisionSource } from "./share";
 
 // Friendly labels for the five advisory agents, used when surfacing a failure.
 const AGENT_LABELS: Record<number, string> = {
@@ -32,6 +34,18 @@ const AGENT_LABELS: Record<number, string> = {
 export default function App() {
   const [memoryItems, setMemoryItems] = useState<DecisionMemoryItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Shared decision record: if the URL carries ?record=, decode it once (defensively)
+  // and render a read-only view. record===null means the param was present but invalid.
+  const [sharedView] = useState<{ encoded: string; record: ReturnType<typeof decodeRecord> } | null>(() => {
+    try {
+      const raw = new URLSearchParams(window.location.search).get(RECORD_PARAM);
+      if (!raw) return null;
+      return { encoded: raw, record: decodeRecord(raw) };
+    } catch {
+      return null;
+    }
+  });
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("civictas_theme");
@@ -581,7 +595,7 @@ export default function App() {
         if (metaIndex !== -1) {
           displayText = stepAccumulator.substring(0, metaIndex);
           try {
-            const parsedMetaMatch = stepAccumulator.match(/\[METADATA_JSON:\s*([^\]]+)\]/);
+            const parsedMetaMatch = stepAccumulator.match(/\[METADATA_JSON:\s*(\{[\s\S]*\})\s*\]/);
             if (parsedMetaMatch) {
               const parsed = JSON.parse(parsedMetaMatch[1]);
               if (parsed.sources) {
@@ -765,7 +779,7 @@ export default function App() {
         if (metaIndex !== -1) {
           displayText = stepAccumulator.substring(0, metaIndex);
           try {
-            const parsedMetaMatch = stepAccumulator.match(/\[METADATA_JSON:\s*([^\]]+)\]/);
+            const parsedMetaMatch = stepAccumulator.match(/\[METADATA_JSON:\s*(\{[\s\S]*\})\s*\]/);
             if (parsedMetaMatch) {
               const parsed = JSON.parse(parsedMetaMatch[1]);
               if (parsed.sources) {
@@ -1031,6 +1045,47 @@ export default function App() {
     // Fallback to first non-empty line under Step 5 heading
     return "Vulnerability-Weighted Allocation Plan Proposal";
   };
+
+  /**
+   * Build a shareable read-only link for the current finalized decision.
+   * Returns { url: null } when the record is too large to encode — in that case
+   * the printable PDF brief is downloaded instead (honest, lossless fallback).
+   */
+  const buildRecordLink = (): { url: string | null; trimmed: boolean } => {
+    const source: DecisionSource = {
+      createdAt: new Date().toISOString(),
+      category,
+      situation,
+      constraints: { budget, sites, equityGoal },
+      recommendation: extractRecommendationValue(),
+      confidence: getConfidencePill(agentStates[5].output) || "High",
+      humanDecision: humanDecisionType || "approved",
+      chosenOption: chosenOption || category,
+      humanRationale: humanRationale || "",
+      checks,
+      aiBrief: agentStates[5].output || "",
+      agentLog: {
+        step1: agentStates[1].output,
+        step2: agentStates[2].output,
+        step3: agentStates[3].output,
+        step4: agentStates[4].output,
+      },
+    };
+
+    const result = encodeRecord(source);
+    if (!result) {
+      // Too large for a link — fall back to the existing PDF export, honestly.
+      triggerDownloadBrief();
+      return { url: null, trimmed: false };
+    }
+    return { url: buildShareUrl(result.encoded), trimmed: result.trimmed };
+  };
+
+  // A shared ?record= link renders the read-only record view for anyone, before
+  // the landing / onboarding / studio flow.
+  if (sharedView) {
+    return <DecisionRecord record={sharedView.record} encoded={sharedView.encoded} />;
+  }
 
   if (view === "landing") {
     return <Landing onEnter={() => setView("onboarding")} engine={engine} />;
@@ -1341,6 +1396,7 @@ export default function App() {
                   onFinalize={handleFinalizeDecision}
                   onStartNew={handleResetWorkflow}
                   onDownloadBrief={triggerDownloadBrief}
+                  onBuildRecordLink={buildRecordLink}
                   reviewers={reviewers}
                   selectedReviewerIndex={selectedReviewerIndex}
                   onSelectReviewer={handleSelectReviewer}

@@ -153,7 +153,7 @@ async function startServer() {
 
     if (token) {
       if (window.opener) {
-        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token }, '*');
+        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', token: token }, window.location.origin);
         setTimeout(() => {
           window.close();
         }, 800);

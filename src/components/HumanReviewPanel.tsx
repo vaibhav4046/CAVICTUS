@@ -5,6 +5,8 @@ import {
   Download,
   RotateCcw,
   ShieldCheck,
+  Link2,
+  Check,
   Trash2,
   Plus,
   Terminal,
@@ -32,7 +34,9 @@ interface HumanReviewPanelProps {
   }) => void;
   onStartNew: () => void;
   onDownloadBrief: () => void;
-  
+  /** Build a shareable read-only link; url is null when too large (PDF downloaded instead). */
+  onBuildRecordLink: () => { url: string | null; trimmed: boolean };
+
   // Custom Reviewer Routing & Notification Props
   reviewers: Array<{
     name: string;
@@ -76,6 +80,32 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   // "Demonstrably reasoned" — the official must engage a specific data gap or
   // dissenting voice, not merely tick boxes (guards against rubber-stamp oversight).
   const [reasonedNote, setReasonedNote] = useState("");
+
+  // Share-record feedback (copied / trimmed-to-fit / PDF fallback / manual copy).
+  const [shareMsg, setShareMsg] = useState<{ tone: "ok" | "info"; text: string } | null>(null);
+
+  const handleShareRecord = async () => {
+    const { url, trimmed } = props.onBuildRecordLink();
+    if (!url) {
+      setShareMsg({
+        tone: "info",
+        text: "This record is too large to fit in a link — the printable PDF brief was downloaded instead.",
+      });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg({
+        tone: "ok",
+        text: trimmed
+          ? "Read-only link copied. Some verbose AI detail was trimmed to fit; the full log is in the PDF brief."
+          : "Read-only link copied to clipboard.",
+      });
+    } catch {
+      // Clipboard blocked (insecure context / permissions) — show the link to copy by hand.
+      setShareMsg({ tone: "info", text: url });
+    }
+  };
 
   // Form to add a new reviewer state
   const [isAddingReviewer, setIsAddingReviewer] = useState(false);
@@ -377,13 +407,22 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
             ) : (
               <>
                 <button
+                  id="share-record-btn"
+                  type="button"
+                  onClick={handleShareRecord}
+                  className="flex-1 py-3 px-6 bg-accent hover:opacity-90 text-on-accent font-semibold text-sm rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 uppercase tracking-wider font-display focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
+                >
+                  {shareMsg?.tone === "ok" ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+                  Share decision record
+                </button>
+                <button
                   id="download-brief-btn"
                   type="button"
                   onClick={props.onDownloadBrief}
-                  className="flex-1 py-3 px-6 bg-accent hover:opacity-90 text-on-accent font-semibold text-sm rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 uppercase tracking-wider font-display focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
+                  className="flex-1 py-3 px-6 border border-border-line bg-surface text-ink hover:bg-surface-2 font-semibold text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
                 >
-                  <Download className="w-4 h-4" />
-                  Download printable decision brief
+                  <Download className="w-4 h-4 text-muted" />
+                  Download PDF brief
                 </button>
                 <button
                   id="start-new-decision-btn"
@@ -397,6 +436,26 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
               </>
             )}
           </div>
+
+          {/* Share-record feedback — honest about trimming / PDF fallback / manual copy */}
+          {shareMsg && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`flex items-start gap-2 text-xs leading-relaxed rounded-xl border px-3 py-2.5 ${
+                shareMsg.tone === "ok"
+                  ? "bg-positive/10 border-positive/20 text-ink"
+                  : "bg-surface-2 border-border-line text-ink"
+              }`}
+            >
+              {shareMsg.tone === "ok" ? (
+                <Check className="w-3.5 h-3.5 text-positive shrink-0 mt-0.5" aria-hidden="true" />
+              ) : (
+                <Link2 className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" aria-hidden="true" />
+              )}
+              <span className="min-w-0 break-all">{shareMsg.text}</span>
+            </div>
+          )}
         </form>
 
         {/* Right Aspect: Reviewer routing pools & Sandbox consoles (Col-span-1) */}
