@@ -62,6 +62,10 @@ const OPENROUTER_BASE_URL = cleanKey(process.env.OPENROUTER_BASE_URL) || "https:
 // abort timeout below that limit so a slow provider degrades to a labeled mock.
 const COMPLETE_MAX_TOKENS = 1200;
 const COMPLETE_TIMEOUT_MS = 45000;
+// The council is one blocking, non-streaming call, so latency matters more than
+// raw depth — a large model can exceed the function limit. Use a faster model
+// here (overridable) while the 5 streaming agents keep the full model.
+const COMPLETE_MODEL = cleanKey(process.env.OPENROUTER_COUNCIL_MODEL) || OPENROUTER_MODEL;
 // Bound a single streamed agent step so one runaway generation can't exceed the
 // function limit mid-stream and truncate the run.
 const STREAM_MAX_TOKENS = 1800;
@@ -561,7 +565,7 @@ export async function complete(system: string, user: string, temperature = 0.3):
         "X-Title": "CIVICTAS",
       },
       body: JSON.stringify({
-        model: OPENROUTER_MODEL,
+        model: COMPLETE_MODEL,
         temperature,
         max_tokens: COMPLETE_MAX_TOKENS,
         messages: [
