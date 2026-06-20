@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Plus, RefreshCw, CheckCircle2, SquarePen, X, Trash2 } from "lucide-react";
 import { DecisionMemoryItem } from "../types";
 
@@ -17,6 +17,46 @@ interface SidebarProps {
 
 export default function Sidebar(props: SidebarProps) {
   const { isOpen = false, onClose } = props;
+  const asideRef = useRef<HTMLElement>(null);
+
+  // Focus trap — ONLY when the mobile drawer is open (below md). On desktop the
+  // sidebar is a docked rail, not a modal, so it must NOT trap focus.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    const aside = asideRef.current;
+    const prev = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(
+        aside?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter((el) => !el.hasAttribute("disabled"));
+    focusables()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      prev?.focus?.();
+    };
+  }, [isOpen, onClose]);
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,6 +77,7 @@ export default function Sidebar(props: SidebarProps) {
 
   return (
     <aside
+      ref={asideRef}
       id="decision-memory-sidebar"
       aria-label="Decision memory"
       className={`bg-surface-solid flex flex-col overflow-hidden font-sans shrink-0

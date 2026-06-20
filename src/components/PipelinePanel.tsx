@@ -409,15 +409,20 @@ export default function PipelinePanel(props: PipelinePanelProps) {
 
   return (
     <section id="pipeline-panel" className="space-y-6">
-      {/* C3: aria-live region announces agent status transitions */}
-      <div aria-live="polite" aria-atomic="true" className="sr-only" id="agent-status-announcer">
-        {Object.entries(props.agentStates).map(([num, state]) => {
-          const label = agentsConfig.find(a => a.num === Number(num))?.title ?? `Agent ${num}`;
-          if (state.status === "running") return `${label} is running.`;
-          if (state.status === "done") return `${label} completed.`;
-          if (state.status === "error") return `${label} encountered an error.`;
-          return null;
-        }).filter(Boolean).join(" ")}
+      {/* aria-live region announces ONE concise current status (not the full
+          history) so screen readers aren't re-read the whole pipeline each change. */}
+      <div aria-live="polite" className="sr-only" id="agent-status-announcer">
+        {(() => {
+          const entries = Object.entries(props.agentStates);
+          const label = (n: number) => agentsConfig.find((a) => a.num === n)?.title ?? `Agent ${n}`;
+          const running = entries.find(([, s]) => s.status === "running");
+          if (running) return `${label(Number(running[0]))} is running.`;
+          const errored = entries.find(([, s]) => s.status === "error");
+          if (errored) return `${label(Number(errored[0]))} encountered an error.`;
+          const doneCount = entries.filter(([, s]) => s.status === "done").length;
+          if (doneCount === entries.length && doneCount > 0) return "All agents completed.";
+          return "";
+        })()}
       </div>
 
       <div className="flex items-center justify-between">
@@ -665,10 +670,11 @@ export default function PipelinePanel(props: PipelinePanelProps) {
                 )}
 
                 {isDone && (
-                  // C3: aria-live="polite" for completed output
+                  // Completed output is a static region (the concise status
+                  // announcer above handles SR notification — no aria-live here,
+                  // which would re-read the full multi-paragraph output on toggle).
                   <div
                     className="prose prose-sm max-w-none text-ink select-text flex-1 overflow-x-auto leading-relaxed"
-                    aria-live="polite"
                     aria-label={`${agent.title} output`}
                   >
                     {renderMarkdownText(cleanedOutput, props.groundingSources, agent.num)}
