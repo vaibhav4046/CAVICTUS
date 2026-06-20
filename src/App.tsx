@@ -21,6 +21,7 @@ import DecisionRecord from "./components/DecisionRecord";
 import { DecisionMemoryItem, AgentState, DecisionConstraints, HumanDecisionType } from "./types";
 import { downloadDecisionBrief, getConfidencePill, describePipelineFailure, PipelineFailure } from "./utils";
 import { decodeRecord, encodeRecord, buildShareUrl, RECORD_PARAM, DecisionSource } from "./share";
+import { useConfirm, useNotify } from "./dialog";
 
 // Friendly labels for the five advisory agents, used when surfacing a failure.
 const AGENT_LABELS: Record<number, string> = {
@@ -42,6 +43,8 @@ function readPreferences(): string {
 }
 
 export default function App() {
+  const confirm = useConfirm();
+  const notify = useNotify();
   const [memoryItems, setMemoryItems] = useState<DecisionMemoryItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -149,7 +152,7 @@ export default function App() {
 
   const handleDeleteReviewer = (index: number) => {
     if (reviewers.length <= 1) {
-      alert("At least one reviewer profile must be maintained.");
+      notify({ tone: "warning", message: "At least one reviewer profile must be maintained." });
       return;
     }
     const updated = reviewers.filter((_, idx) => idx !== index);
@@ -1015,8 +1018,15 @@ export default function App() {
   /**
    * Clear all decisions memory except seeds
    */
-  const handleClearMemory = () => {
-    if (confirm("Are you sure you want to delete your Decision Memory history? This action is permanent.")) {
+  const handleClearMemory = async () => {
+    const ok = await confirm({
+      title: "Clear Decision Memory?",
+      body: "This permanently deletes your saved decision history. This action cannot be undone.",
+      confirmLabel: "Clear memory",
+      cancelLabel: "Keep history",
+      tone: "danger",
+    });
+    if (ok) {
       saveToLocalStorage([]);
       handleResetWorkflow();
     }

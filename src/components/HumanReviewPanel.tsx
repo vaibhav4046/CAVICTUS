@@ -17,6 +17,7 @@ import {
   CornerDownRight
 } from "lucide-react";
 import { HumanDecisionType } from "../types";
+import { useNotify } from "../dialog";
 
 interface HumanReviewPanelProps {
   isPipelineDone: boolean;
@@ -68,6 +69,7 @@ interface HumanReviewPanelProps {
 }
 
 export default function HumanReviewPanel(props: HumanReviewPanelProps) {
+  const notify = useNotify();
   const [decisionType, setDecisionType] = useState<HumanDecisionType | "">("");
   const [chosenOption, setChosenOption] = useState("");
   const [humanRationale, setHumanRationale] = useState("");
@@ -159,7 +161,7 @@ export default function HumanReviewPanel(props: HumanReviewPanelProps) {
   const handleSaveReviewer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRevName.trim() || !newRevHandle.trim()) {
-      alert("Please provide the reviewer's name and contact handle.");
+      notify({ tone: "warning", message: "Please provide the reviewer's name and contact handle." });
       return;
     }
     props.onAddReviewer({
