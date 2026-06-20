@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { X, Sparkles, UserCheck, Search, ShieldAlert } from "lucide-react";
 
 interface HowItWorksModalProps {
@@ -5,8 +6,49 @@ interface HowItWorksModalProps {
   onClose: () => void;
 }
 
-export default function HowItWorksModal(props: HowItWorksModalProps) {
-  if (!props.isOpen) return null;
+export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Focus management for the modal dialog (WCAG 2.1.2 / 2.4.3): focus in on open,
+  // trap Tab, close on Escape, return focus to the trigger on close.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevActive = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    const focusables = () =>
+      Array.from(
+        panel?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter((el) => !el.hasAttribute("disabled"));
+    focusables()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      prevActive?.focus?.();
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -15,8 +57,14 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
-      <div className="relative w-full max-w-2xl overflow-hidden bg-surface-solid border border-border-line rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div
+        ref={panelRef}
+        className="relative w-full max-w-2xl overflow-hidden bg-surface-solid border border-border-line rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border-line bg-surface">
           <div className="flex items-center gap-2">
@@ -27,7 +75,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
           </div>
           <button
             id="close-modal-btn"
-            onClick={props.onClose}
+            onClick={onClose}
             className="p-1 px-1.5 rounded-lg border border-border-line bg-surface-solid hover:bg-surface text-muted hover:text-ink transition-colors"
             aria-label="Close dialog"
           >
@@ -60,7 +108,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
               </span>
               <h3 className="font-semibold text-ink mt-2">Search Grounding</h3>
               <p className="text-xs text-muted mt-1">
-                Launches real-time Google Search queries to research current regional demographics, find public safety/health benchmarks, and identify statistics.
+                When a Gemini key is connected, launches live Google Search grounding to research regional demographics and public safety/health benchmarks; otherwise it reasons over clearly-labeled public benchmarks. Every finding carries a confidence level and named data gaps.
               </p>
             </div>
 
@@ -110,7 +158,7 @@ export default function HowItWorksModal(props: HowItWorksModalProps) {
         <div className="p-4 bg-surface border-t border-border-line flex justify-end">
           <button
             id="modal-understand-btn"
-            onClick={props.onClose}
+            onClick={onClose}
             className="px-4 py-2 bg-accent hover:opacity-90 text-white font-medium text-sm rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-accent/20 outline-none"
           >
             I Understand the Protocol

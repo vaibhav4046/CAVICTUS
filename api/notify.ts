@@ -9,6 +9,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+  // Same shared-secret gate as /api/agent: open in the default demo (secret
+  // unset), but never an unauthenticated trigger for real Telegram/email/Twilio
+  // sends when a secret is configured.
+  const sharedSecret = process.env.API_SHARED_SECRET || "";
+  if (sharedSecret && req.headers["x-civictas-key"] !== sharedSecret) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const b = (req.body || {}) as Record<string, string>;
   const payload: ReviewPayload = {
     decisionId: b.decisionId || "",

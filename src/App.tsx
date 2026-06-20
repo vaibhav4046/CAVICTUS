@@ -733,12 +733,16 @@ export default function App() {
         .join("\n\n");
     }
 
+    // Only carry forward DONE outputs from steps BEFORE the retried one; steps
+    // >= stepNum are being recomputed, so they must start empty (no stale feed).
+    const done = (n: 1 | 2 | 3 | 4 | 5) =>
+      stepNum > n && agentStates[n].status === "done" ? agentStates[n].output : "";
     const runOutputs = {
-      step1: agentStates[1].status === "done" ? agentStates[1].output : "",
-      step2: agentStates[2].status === "done" ? agentStates[2].output : "",
-      step3: agentStates[3].status === "done" ? agentStates[3].output : "",
-      step4: agentStates[4].status === "done" ? agentStates[4].output : "",
-      step5: agentStates[5].status === "done" ? agentStates[5].output : "",
+      step1: done(1),
+      step2: done(2),
+      step3: done(3),
+      step4: done(4),
+      step5: "",
     };
 
     let activeStep = stepNum;
@@ -774,6 +778,7 @@ export default function App() {
 
       if (!res.ok) throw new Error(`Execution error at step ${sNum}`);
       const reader = res.body?.getReader();
+      if (!reader) throw new Error("Unable to establish chunked reader interface.");
       const decoder = new TextDecoder();
       let stepAccumulator = "";
 
@@ -1181,7 +1186,7 @@ export default function App() {
             <span className="hidden sm:inline-flex items-center gap-1.5">
               <span
                 className="inline-flex items-center gap-1.5 text-[10px] font-mono whitespace-nowrap bg-accent-soft text-accent font-semibold px-2.5 py-1 rounded-full border border-accent/20"
-                aria-label={`AI engine: ${engine.provider} ${engine.model}${engine.search ? ", web search enabled" : ""}`}
+                aria-label={`AI engine: ${engine.provider} ${engine.model}`}
               >
                 <Cpu className="w-3 h-3 shrink-0" aria-hidden="true" />
                 {engine.provider} · {engine.model}
@@ -1191,7 +1196,7 @@ export default function App() {
                 pulse={engine.search}
                 title={
                   engine.search
-                    ? "Connected to a live model with web grounding"
+                    ? "Connected to a live model (Gemini adds live Google Search grounding; other providers reason over labeled benchmarks)"
                     : "Offline demo mock — no API key configured"
                 }
               />
