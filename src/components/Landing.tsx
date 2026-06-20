@@ -45,6 +45,19 @@ export default function Landing({ onEnter, engine }: LandingProps) {
             homework. A human makes the call.
           </p>
 
+          <div className="mt-8 flex items-baseline gap-3 justify-center flex-wrap">
+            <span className="font-display font-bold text-ink text-4xl md:text-5xl tabular-nums leading-none">
+              32–51%
+            </span>
+            <span className="text-sm text-muted text-left max-w-xs leading-snug">
+              estimated share of cooling centers within walking distance of the most heat-vulnerable
+              residents in many cities. CIVICTAS makes that gap visible.
+            </span>
+          </div>
+          <p className="mt-1.5 text-[11px] text-faint font-mono">
+            est. — CDC Heat &amp; Health Tracker / EPA heat-equity research
+          </p>
+
           <div className="mt-9 flex items-center gap-3 flex-wrap justify-center">
             <button
               onClick={onEnter}
@@ -59,12 +72,11 @@ export default function Landing({ onEnter, engine }: LandingProps) {
                   {engine.provider} · {engine.model}
                 </span>
                 <RealityPill
-                  kind={engine.search ? "live" : "mock"}
-                  pulse={engine.search}
+                  kind={engine.provider === "mock" ? "mock" : "ready"}
                   title={
-                    engine.search
-                      ? "Connected to a live model (Gemini adds live Google Search grounding; other providers reason over labeled benchmarks)"
-                      : "Offline demo mock — no API key configured"
+                    engine.provider === "mock"
+                      ? "Offline demo mock — no API key configured"
+                      : "A live model is configured. Runs stream live, or fall back to a clearly labeled demo if the provider is unavailable."
                   }
                 />
               </span>

@@ -42,6 +42,10 @@ interface CouncilPanelProps {
   situation: string;
   equityGoal: string;
   recommendation: string;
+  /** Full advisory analysis so the council deliberates over the real run. */
+  evidence?: string;
+  projections?: string;
+  audit?: string;
   channels: ChannelStatus[];
   /** When true, the council runs in deterministic demo mode (forced mock). */
   demo?: boolean;
@@ -75,6 +79,9 @@ export default function CouncilPanel(props: CouncilPanelProps) {
         situation: props.situation,
         equityGoal: props.equityGoal,
         recommendation: props.recommendation,
+        evidence: props.evidence ?? "",
+        projections: props.projections ?? "",
+        audit: props.audit ?? "",
         demo: props.demo ?? false,
       }),
     })
@@ -173,9 +180,10 @@ export default function CouncilPanel(props: CouncilPanelProps) {
 
       {result && !loading && (
         <p className="text-xs text-muted leading-relaxed border-t border-border-line pt-3">
-          Synthetic personas — a stress-test to surface dissent and show{" "}
-          <strong className="text-ink">where to verify with real residents</strong>, not a
-          substitute for community consent.
+          One model estimates how a fixed roster of 108 community archetypes (18 roles &times; 6
+          segments) would react to this analysis — a stress-test to surface dissent and show{" "}
+          <strong className="text-ink">where to verify with real residents</strong>. Not 108
+          independent agents, and not a substitute for community consent.
         </p>
       )}
 

@@ -1447,6 +1447,9 @@ export default function App() {
                   situation={situation}
                   equityGoal={equityGoal}
                   recommendation={extractRecommendationValue()}
+                  evidence={agentStates[2].output}
+                  projections={agentStates[3].output}
+                  audit={agentStates[4].output}
                   channels={channels}
                   demo={ranInDemo}
                 />

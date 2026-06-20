@@ -82,7 +82,15 @@ export interface CouncilInput {
   situation: string;
   equityGoal: string;
   recommendation: string;
+  /** Full advisory analysis so the council deliberates over the real run, not just
+   *  a one-line headline. Truncated before prompting to bound token cost. */
+  evidence?: string;
+  projections?: string;
+  audit?: string;
 }
+
+const clip = (s: string | undefined, n: number): string =>
+  s && s.trim() ? s.trim().slice(0, n) : "(not provided)";
 
 function clampInt(n: any, fallback: number): number {
   const v = Math.round(Number(n));
@@ -123,7 +131,18 @@ export async function runCouncil(
 - Equity goal: ${input.equityGoal}
 - Proposed recommendation: ${input.recommendation}
 
-Convene this council and have every persona vote:
+The council has the full advisory analysis to deliberate over (react to THIS, not just the headline):
+
+### Evidence base (Agent 2)
+${clip(input.evidence, 1800)}
+
+### Outcome projections (Agent 3)
+${clip(input.projections, 1400)}
+
+### Equity & risk audit (Agent 4)
+${clip(input.audit, 1400)}
+
+Convene this council and have every persona vote, weighing the evidence, the projected outcomes, and the audit's named risks above:
 ${rosterSummary}
 
 Return STRICT JSON with this exact shape (counts MUST sum to ${COUNCIL_SIZE}):
